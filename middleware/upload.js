@@ -14,6 +14,17 @@ const storage = multer.diskStorage({
     },
 });
 
+// File filter: Only accept image types
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = ['.jpg', '.jpeg', '.png', '.gif'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.includes(ext)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only image files are allowed'), false);
+    }
+};
+
 const upload = multer({ storage });
 
 router.post('/register', upload.single('profile_image'), registerUser);
