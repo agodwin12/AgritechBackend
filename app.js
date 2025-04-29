@@ -1,33 +1,64 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const { sequelize } = require('./models');
 require('dotenv').config();
+
+// Import sequelize directly from your config file
 const sequelize = require('./config/db');
-const userRoutes = require('./routes/userRoutes');
+
+// Route imports
 const authRoutes = require('./routes/auth');
 const myProfileRoutes = require('./routes/myProfileRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const subCategoryRoutes = require('./routes/subCategoryRoutes');
 const productRoutes = require('./routes/productRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+const userRoutes = require('./routes/userRoutes');
+// const orderRoutes = require('./routes/orderRoutes'); // Commented out problematic route
 
+// Middleware
 app.use(cors());
-app.use(express.json()); // ✅ VERY IMPORTANT
-app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static('uploads'));
-
-
-
 app.use(express.json());
-app.use('/api/users', userRoutes);
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/myprofile', myProfileRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/subcategories', subCategoryRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/users', userRoutes);
+// app.use('/api/orders', orderRoutes); // Commented out problematic route
 
-// Sync Sequelize Models
-sequelize.sync().then(() => {
-    console.log('🟢 Database synced');
-    app.listen(process.env.PORT, () => {
-        console.log(`🚀 Server running on port ${process.env.PORT}`);
-    });
-}).catch((err) => {
-    console.error('❌ Failed to sync DB:', err);
+// Test database connection
+const testConnection = async () => {
+    try {
+        await sequelize.authenticate();
+        console.log('✅ Connection to database has been established successfully.');
+        return true;
+    } catch (error) {
+        console.error('❌ Unable to connect to the database:', error);
+        return false;
+    }
+};
+
+// Test connection and start server
+testConnection().then(connected => {
+    if (connected) {
+        // Sync database and start server
+        sequelize.sync({ force: false })
+            .then(() => {
+                console.log('🟢 Database synced');
+                const PORT = process.env.PORT || 3000;
+                app.listen(PORT, () => {
+                    console.log(`🚀 Server running on port ${PORT}`);
+                });
+            })
+            .catch((err) => {
+                console.error('❌ Failed to sync database:', err);
+            });
+    } else {
+        console.error('❌ Could not connect to the database. Server not started.');
+    }
 });
