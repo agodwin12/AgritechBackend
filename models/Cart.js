@@ -1,21 +1,17 @@
-// models/OrderItem.js
+// models/Cart.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const OrderItem = sequelize.define('OrderItem', {
+const Cart = sequelize.define('Cart', {
     quantity: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        defaultValue: 1,
+        validate: {
+            min: 1
+        }
     },
-    price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-    },
-    subtotal: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-    },
-    OrderId: {
+    UserId: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
@@ -24,8 +20,8 @@ const OrderItem = sequelize.define('OrderItem', {
         allowNull: false,
     }
 }, {
-    tableName: 'order_items',
+    tableName: 'carts',
     timestamps: true,
 });
 
-module.exports = OrderItem;
+module.exports = Cart;
