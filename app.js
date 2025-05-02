@@ -14,12 +14,15 @@ const subCategoryRoutes = require('./routes/subCategoryRoutes');
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const userRoutes = require('./routes/userRoutes');
+const forumRoutes = require('./routes/forumRoutes');
+const path = require('path');
 // const orderRoutes = require('./routes/orderRoutes'); // Commented out problematic route
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -30,6 +33,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/users', userRoutes);
 // app.use('/api/orders', orderRoutes); // Commented out problematic route
+app.use('/api/forum', forumRoutes);
 
 // Test database connection
 const testConnection = async () => {

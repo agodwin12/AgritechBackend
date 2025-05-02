@@ -9,6 +9,7 @@ const Product = require('./Product');
 const Order = require('./Order');
 const OrderItem = require('./OrderItem');
 const Cart = require('./Cart');
+const ForumMessage = require('./ForumMessage');
 
 // Category-SubCategory relationship (one-to-many)
 Category.hasMany(SubCategory, { foreignKey: 'category_id' });
@@ -42,6 +43,10 @@ Cart.belongsTo(User);
 Product.hasMany(Cart);
 Cart.belongsTo(Product);
 
+//forum associations
+User.hasMany(ForumMessage, { foreignKey: 'user_id' });
+ForumMessage.belongsTo(User, { foreignKey: 'user_id' });
+
 // Export models and sequelize instance
 module.exports = {
     sequelize, // Export the sequelize instance from your config
@@ -51,5 +56,6 @@ module.exports = {
     Product,
     Order,
     OrderItem,
-    Cart
+    Cart,
+    ForumMessage,
 };
