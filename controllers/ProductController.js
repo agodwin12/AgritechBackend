@@ -1,9 +1,8 @@
-// controllers/ProductController.js
 const { Product, Category, SubCategory } = require('../models');
 
 const ProductController = {
-    // Get all products
     async getAllProducts(req, res) {
+        console.log('📥 GET all active products');
         try {
             const products = await Product.findAll({
                 where: { is_active: true },
@@ -12,14 +11,16 @@ const ProductController = {
                     { model: SubCategory }
                 ]
             });
+            console.log('✅ Products fetched:', products.length);
             return res.status(200).json(products);
         } catch (error) {
+            console.error('❌ Error in getAllProducts:', error);
             return res.status(500).json({ error: error.message });
         }
     },
 
-    // Get featured products
     async getFeaturedProducts(req, res) {
+        console.log('📥 GET featured products');
         try {
             const products = await Product.findAll({
                 where: {
@@ -31,14 +32,16 @@ const ProductController = {
                     { model: SubCategory }
                 ]
             });
+            console.log('✅ Featured products fetched:', products.length);
             return res.status(200).json(products);
         } catch (error) {
+            console.error('❌ Error in getFeaturedProducts:', error);
             return res.status(500).json({ error: error.message });
         }
     },
 
-    // Get product by ID
     async getProductById(req, res) {
+        console.log('📥 GET product by ID:', req.params.id);
         try {
             const product = await Product.findByPk(req.params.id, {
                 include: [
@@ -47,16 +50,19 @@ const ProductController = {
                 ]
             });
             if (!product) {
+                console.warn('⚠️ Product not found:', req.params.id);
                 return res.status(404).json({ message: 'Product not found' });
             }
+            console.log('✅ Product found:', product.id);
             return res.status(200).json(product);
         } catch (error) {
+            console.error('❌ Error in getProductById:', error);
             return res.status(500).json({ error: error.message });
         }
     },
 
-    // Get products by category
     async getProductsByCategory(req, res) {
+        console.log('📥 GET products by category ID:', req.params.categoryId);
         try {
             const products = await Product.findAll({
                 where: {
@@ -68,14 +74,16 @@ const ProductController = {
                     { model: SubCategory }
                 ]
             });
+            console.log(`✅ ${products.length} products found for category ${req.params.categoryId}`);
             return res.status(200).json(products);
         } catch (error) {
+            console.error('❌ Error in getProductsByCategory:', error);
             return res.status(500).json({ error: error.message });
         }
     },
 
-    // Get products by subcategory
     async getProductsBySubCategory(req, res) {
+        console.log('📥 GET products by subcategory ID:', req.params.subCategoryId);
         try {
             const products = await Product.findAll({
                 where: {
@@ -87,49 +95,59 @@ const ProductController = {
                     { model: SubCategory }
                 ]
             });
+            console.log(`✅ ${products.length} products found for subcategory ${req.params.subCategoryId}`);
             return res.status(200).json(products);
         } catch (error) {
+            console.error('❌ Error in getProductsBySubCategory:', error);
             return res.status(500).json({ error: error.message });
         }
     },
 
-    // Create a new product
     async createProduct(req, res) {
+        console.log('📥 CREATE product with data:', req.body);
         try {
             const product = await Product.create(req.body);
+            console.log('✅ Product created:', product.id);
             return res.status(201).json(product);
         } catch (error) {
+            console.error('❌ Error in createProduct:', error);
             return res.status(500).json({ error: error.message });
         }
     },
 
-    // Update a product
     async updateProduct(req, res) {
+        console.log('📥 UPDATE product ID:', req.params.id, 'with data:', req.body);
         try {
             const [updated] = await Product.update(req.body, {
                 where: { id: req.params.id }
             });
             if (updated) {
                 const updatedProduct = await Product.findByPk(req.params.id);
+                console.log('✅ Product updated:', updatedProduct.id);
                 return res.status(200).json(updatedProduct);
             }
+            console.warn('⚠️ Product not found to update:', req.params.id);
             return res.status(404).json({ message: 'Product not found' });
         } catch (error) {
+            console.error('❌ Error in updateProduct:', error);
             return res.status(500).json({ error: error.message });
         }
     },
 
-    // Delete a product
     async deleteProduct(req, res) {
+        console.log('📥 DELETE product ID:', req.params.id);
         try {
             const deleted = await Product.destroy({
                 where: { id: req.params.id }
             });
             if (deleted) {
+                console.log('✅ Product deleted:', req.params.id);
                 return res.status(204).send();
             }
+            console.warn('⚠️ Product not found to delete:', req.params.id);
             return res.status(404).json({ message: 'Product not found' });
         } catch (error) {
+            console.error('❌ Error in deleteProduct:', error);
             return res.status(500).json({ error: error.message });
         }
     }
