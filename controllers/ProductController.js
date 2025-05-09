@@ -106,14 +106,49 @@ const ProductController = {
     async createProduct(req, res) {
         console.log('📥 CREATE product with data:', req.body);
         try {
-            const product = await Product.create(req.body);
+            const {
+                name,
+                description,
+                price,
+                stock,
+                unit,
+                categoryId,
+                subCategoryId,
+                isFeatured,
+                sellerId
+            } = req.body;
+
+            // Parse image file paths
+            const imageUrls = req.files?.map(file => `/uploads/${file.filename}`) || [];
+
+            // Build product object
+            const newProduct = {
+                name,
+                description,
+                price: parseFloat(price),
+                stock_quantity: parseInt(stock),
+                unit,
+                is_featured: isFeatured === 'true',
+                is_active: true,
+                images: imageUrls, // ✅ stored as real JSON array
+                CategoryId: parseInt(categoryId),
+                SubCategoryId: parseInt(subCategoryId),
+                seller_id: parseInt(sellerId)
+            };
+
+            // Save to database
+            const product = await Product.create(newProduct);
+
             console.log('✅ Product created:', product.id);
             return res.status(201).json(product);
+
         } catch (error) {
             console.error('❌ Error in createProduct:', error);
             return res.status(500).json({ error: error.message });
         }
     },
+
+
 
     async updateProduct(req, res) {
         console.log('📥 UPDATE product ID:', req.params.id, 'with data:', req.body);
