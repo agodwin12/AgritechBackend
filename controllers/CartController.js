@@ -3,8 +3,6 @@ const { Cart, Product, User, Category, SubCategory } = require('../models');
 const CartController = {
     // Get user's cart
     async getUserCart(req, res) {
-        console.log('📥 Add to cart:', { productId, quantity, userId: req.user.id });
-
         try {
             console.log('📥 Fetching cart for user:', req.user.id);
 
@@ -34,7 +32,8 @@ const CartController = {
             console.error('❌ Error getting cart:', error);
             return res.status(500).json({ error: error.message });
         }
-    },
+    }
+    ,
 
     // Add item to cart
     async addToCart(req, res) {
