@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { getMyProfile } = require('../controllers/myProfileController');
-const authMiddleware = require('../middleware/authMiddleware');
+const { authenticate } = require('../middleware/authMiddleware'); // <-- FIXED
 
-router.get('/', authMiddleware, getMyProfile);
+router.get('/', authenticate, getMyProfile); // <-- Now valid
 
 module.exports = router;

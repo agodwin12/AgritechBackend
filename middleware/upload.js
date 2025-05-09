@@ -1,32 +1,33 @@
-const express = require('express');
-const router = express.Router();
+// middlewares/upload.js
 const multer = require('multer');
-const { registerUser } = require('../controllers/userController');
+const path = require('path');
 
-// Configure multer for single file upload
+// Set up storage
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Make sure this folder exists
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
     },
-    filename: (req, file, cb) => {
+    filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, uniqueSuffix + '-' + file.originalname);
     },
 });
 
-// File filter: Only accept image types
-const fileFilter = (req, file, cb) => {
+// File filter
+const fileFilter = function (req, file, cb) {
     const allowedTypes = ['.jpg', '.jpeg', '.png', '.gif'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowedTypes.includes(ext)) {
         cb(null, true);
     } else {
-        cb(new Error('Only image files are allowed'), false);
+        cb(new Error('Only image files are allowed'));
     }
 };
 
-const upload = multer({ storage });
+// Multer instance
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+});
 
-router.post('/register', upload.single('profile_image'), registerUser);
-
-module.exports = router;
+module.exports = upload;
