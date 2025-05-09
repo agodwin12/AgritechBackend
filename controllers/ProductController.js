@@ -8,11 +8,39 @@ const ProductController = {
                 where: { is_active: true },
                 include: [
                     { model: Category },
-                    { model: SubCategory }
-                ]
+                    { model: SubCategory },
+                ],
             });
-            console.log('✅ Products fetched:', products.length);
-            return res.status(200).json(products);
+
+            console.log(`✅ Products fetched: ${products.length}`);
+            const hostUrl = `${req.protocol}://${req.get('host')}`;
+
+            const updatedProducts = products.map((product, index) => {
+                console.log(`🔹 Product ${index + 1}: ID=${product.id}, Name=${product.name}`);
+                console.log(`   └ Images: ${JSON.stringify(product.images)}`);
+
+                let updatedImages = [];
+                try {
+                    if (Array.isArray(product.images)) {
+                        updatedImages = product.images;
+                    } else if (typeof product.images === 'string') {
+                        updatedImages = JSON.parse(product.images);
+                    }
+
+                    updatedImages = updatedImages.map(img =>
+                        img.startsWith('http') ? img : `${hostUrl}${img.startsWith('/') ? '' : '/'}${img}`
+                    );
+                } catch (e) {
+                    console.warn(`⚠️ Failed to parse images for product ID ${product.id}`);
+                }
+
+                return {
+                    ...product.toJSON(),
+                    images: updatedImages,
+                };
+            });
+
+            return res.status(200).json(updatedProducts);
         } catch (error) {
             console.error('❌ Error in getAllProducts:', error);
             return res.status(500).json({ error: error.message });
@@ -25,20 +53,49 @@ const ProductController = {
             const products = await Product.findAll({
                 where: {
                     is_active: true,
-                    is_featured: true
+                    is_featured: true,
                 },
                 include: [
                     { model: Category },
-                    { model: SubCategory }
-                ]
+                    { model: SubCategory },
+                ],
             });
-            console.log('✅ Featured products fetched:', products.length);
-            return res.status(200).json(products);
+
+            console.log(`✅ Featured products fetched: ${products.length}`);
+            const hostUrl = `${req.protocol}://${req.get('host')}`;
+
+            const updatedProducts = products.map((product, index) => {
+                console.log(`⭐ Product ${index + 1}: ID=${product.id}, Name=${product.name}`);
+                console.log(`   └ Images: ${JSON.stringify(product.images)}`);
+
+                let updatedImages = [];
+                try {
+                    if (Array.isArray(product.images)) {
+                        updatedImages = product.images;
+                    } else if (typeof product.images === 'string') {
+                        updatedImages = JSON.parse(product.images);
+                    }
+
+                    updatedImages = updatedImages.map(img =>
+                        img.startsWith('http') ? img : `${hostUrl}${img.startsWith('/') ? '' : '/'}${img}`
+                    );
+                } catch (e) {
+                    console.warn(`⚠️ Failed to parse images for product ID ${product.id}`);
+                }
+
+                return {
+                    ...product.toJSON(),
+                    images: updatedImages,
+                };
+            });
+
+            return res.status(200).json(updatedProducts);
         } catch (error) {
             console.error('❌ Error in getFeaturedProducts:', error);
             return res.status(500).json({ error: error.message });
         }
     },
+
 
     async getProductById(req, res) {
         console.log('📥 GET product by ID:', req.params.id);
@@ -46,14 +103,18 @@ const ProductController = {
             const product = await Product.findByPk(req.params.id, {
                 include: [
                     { model: Category },
-                    { model: SubCategory }
-                ]
+                    { model: SubCategory },
+                ],
             });
+
             if (!product) {
                 console.warn('⚠️ Product not found:', req.params.id);
                 return res.status(404).json({ message: 'Product not found' });
             }
-            console.log('✅ Product found:', product.id);
+
+            console.log(`✅ Product found: ID=${product.id}, Name=${product.name}`);
+            console.log(`   └ Images: ${JSON.stringify(product.images)}`);
+
             return res.status(200).json(product);
         } catch (error) {
             console.error('❌ Error in getProductById:', error);
@@ -67,13 +128,14 @@ const ProductController = {
             const products = await Product.findAll({
                 where: {
                     CategoryId: req.params.categoryId,
-                    is_active: true
+                    is_active: true,
                 },
                 include: [
                     { model: Category },
-                    { model: SubCategory }
-                ]
+                    { model: SubCategory },
+                ],
             });
+
             console.log(`✅ ${products.length} products found for category ${req.params.categoryId}`);
             return res.status(200).json(products);
         } catch (error) {
@@ -88,13 +150,14 @@ const ProductController = {
             const products = await Product.findAll({
                 where: {
                     SubCategoryId: req.params.subCategoryId,
-                    is_active: true
+                    is_active: true,
                 },
                 include: [
                     { model: Category },
-                    { model: SubCategory }
-                ]
+                    { model: SubCategory },
+                ],
             });
+
             console.log(`✅ ${products.length} products found for subcategory ${req.params.subCategoryId}`);
             return res.status(200).json(products);
         } catch (error) {
@@ -115,13 +178,12 @@ const ProductController = {
                 categoryId,
                 subCategoryId,
                 isFeatured,
-                sellerId
+                sellerId,
             } = req.body;
 
-            // Parse image file paths
-            const imageUrls = req.files?.map(file => `/uploads/${file.filename}`) || [];
+            const imageUrls = req.files?.map(file => `${req.protocol}://${req.get('host')}/uploads/${file.filename}`) || [];
+            console.log('📎 Uploaded image paths:', imageUrls);
 
-            // Build product object
             const newProduct = {
                 name,
                 description,
@@ -130,31 +192,26 @@ const ProductController = {
                 unit,
                 is_featured: isFeatured === 'true',
                 is_active: true,
-                images: imageUrls, // ✅ stored as real JSON array
+                images: imageUrls,
                 CategoryId: parseInt(categoryId),
                 SubCategoryId: parseInt(subCategoryId),
-                seller_id: parseInt(sellerId)
+                seller_id: parseInt(sellerId),
             };
 
-            // Save to database
             const product = await Product.create(newProduct);
-
             console.log('✅ Product created:', product.id);
             return res.status(201).json(product);
-
         } catch (error) {
             console.error('❌ Error in createProduct:', error);
             return res.status(500).json({ error: error.message });
         }
     },
 
-
-
     async updateProduct(req, res) {
         console.log('📥 UPDATE product ID:', req.params.id, 'with data:', req.body);
         try {
             const [updated] = await Product.update(req.body, {
-                where: { id: req.params.id }
+                where: { id: req.params.id },
             });
             if (updated) {
                 const updatedProduct = await Product.findByPk(req.params.id);
@@ -173,7 +230,7 @@ const ProductController = {
         console.log('📥 DELETE product ID:', req.params.id);
         try {
             const deleted = await Product.destroy({
-                where: { id: req.params.id }
+                where: { id: req.params.id },
             });
             if (deleted) {
                 console.log('✅ Product deleted:', req.params.id);
@@ -185,7 +242,7 @@ const ProductController = {
             console.error('❌ Error in deleteProduct:', error);
             return res.status(500).json({ error: error.message });
         }
-    }
+    },
 };
 
 module.exports = ProductController;
