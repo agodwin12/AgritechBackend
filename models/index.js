@@ -43,8 +43,14 @@ ForumMessage.belongsTo(User, { foreignKey: 'user_id' });
 Product.hasMany(Review, { foreignKey: 'productId', onDelete: 'CASCADE' });
 Review.belongsTo(Product, { foreignKey: 'productId' });
 
-User.hasMany(Review, { foreignKey: 'user_id' }); // Optional
-Review.belongsTo(User, { foreignKey: 'user_id' }); // Optional
+User.hasMany(Review, { foreignKey: 'user_id', as: 'reviews' }); // ✅ CORRECT
+Review.belongsTo(User, { foreignKey: 'user_id', as: 'user' });  // optional but consistent
+
+
+// Product <-> User (seller)
+Product.belongsTo(User, { foreignKey: 'seller_id', as: 'seller' });
+User.hasMany(Product, { foreignKey: 'seller_id', as: 'products' });
+
 
 module.exports = {
     sequelize,

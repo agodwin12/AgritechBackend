@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 
 const { registerUser } = require('../controllers/userController');
+const { getUserProfile } = require('../controllers/myProfileController');
 
 // Configure storage
 const storage = multer.diskStorage({
@@ -19,5 +20,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post('/register', upload.single('profile_image'), registerUser);
+
+router.get('/:userId/profile', getUserProfile);
+
 
 module.exports = router;

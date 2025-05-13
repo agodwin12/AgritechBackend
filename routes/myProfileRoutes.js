@@ -5,4 +5,6 @@ const { authenticate } = require('../middleware/authMiddleware'); // <-- FIXED
 
 router.get('/', authenticate, getMyProfile); // <-- Now valid
 
+
+
 module.exports = router;

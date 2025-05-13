@@ -1,7 +1,7 @@
-const { Product, Category, SubCategory } = require('../models');
+const { Product, Category, SubCategory, User } = require('../models');
 
 function formatProduct(product, hostUrl) {
-    console.log(`🔄 Formatting product ID=${product.id}`);
+    console.log(`\n🔄 Formatting product ID=${product.id}`);
 
     const now = new Date();
 
@@ -24,33 +24,42 @@ function formatProduct(product, hostUrl) {
         console.warn(`⚠️ Failed to parse images for product ID ${product.id}: ${e}`);
     }
 
-    const isNew = new Date(product.createdAt) >= new Date(now - 48 * 60 * 60 * 1000); // 48h
+    const isNew = new Date(product.createdAt) >= new Date(now - 48 * 60 * 60 * 1000);
     console.log(`🆕 isNew = ${isNew} for product ${product.id}`);
+
+    const seller = product.seller || {};
 
     const result = {
         ...product.toJSON(),
         images: updatedImages,
         isNew,
+        userId: seller.id || null,
+        sellerName: seller.full_name || 'Anonymous',
+        sellerImage: seller.profile_image ? `${hostUrl}/uploads/${seller.profile_image}` : null,
+        sellerBio: seller.bio || '',
+        facebook: seller.facebook || null,
+        instagram: seller.instagram || null,
+        twitter: seller.twitter || null,
+        tiktok: seller.tiktok || null,
     };
 
-    console.log(`✅ Formatted product:`, result);
+    console.log(`✅ Final formatted product:`, result);
     return result;
 }
 
 const ProductController = {
     async getAllProducts(req, res) {
-        console.log('📥 GET all active products');
+        console.log('\n📥 GET all active products');
         try {
             const products = await Product.findAll({
                 where: { is_active: true },
-                include: [{ model: Category }, { model: SubCategory }],
+                include: [Category, SubCategory, { model: User, as: 'seller' }],
             });
 
             console.log(`🔢 Total products fetched: ${products.length}`);
             const hostUrl = `${req.protocol}://${req.get('host')}`;
             const formatted = products.map(p => formatProduct(p, hostUrl));
 
-            console.log(`📦 Returning products:`, formatted);
             return res.status(200).json(formatted);
         } catch (error) {
             console.error('❌ Error in getAllProducts:', error);
@@ -59,11 +68,11 @@ const ProductController = {
     },
 
     async getFeaturedProducts(req, res) {
-        console.log('📥 GET featured products');
+        console.log('\n📥 GET featured products');
         try {
             const products = await Product.findAll({
                 where: { is_active: true, is_featured: true },
-                include: [{ model: Category }, { model: SubCategory }],
+                include: [Category, SubCategory, { model: User, as: 'seller' }],
             });
 
             console.log(`🌟 Total featured products: ${products.length}`);
@@ -78,18 +87,16 @@ const ProductController = {
     },
 
     async getProductById(req, res) {
-        console.log('📥 GET product by ID:', req.params.id);
+        console.log(`\n📥 GET product by ID: ${req.params.id}`);
         try {
             const product = await Product.findByPk(req.params.id, {
-                include: [{ model: Category }, { model: SubCategory }],
+                include: [Category, SubCategory, { model: User, as: 'seller' }],
             });
 
             if (!product) {
                 console.warn('⚠️ Product not found:', req.params.id);
                 return res.status(404).json({ message: 'Product not found' });
             }
-
-            console.log('📄 Raw product:', product.toJSON());
 
             const hostUrl = `${req.protocol}://${req.get('host')}`;
             const formatted = formatProduct(product, hostUrl);
@@ -102,11 +109,11 @@ const ProductController = {
     },
 
     async getProductsByCategory(req, res) {
-        console.log('📥 GET products by category ID:', req.params.categoryId);
+        console.log(`\n📥 GET products by category ID: ${req.params.categoryId}`);
         try {
             const products = await Product.findAll({
                 where: { CategoryId: req.params.categoryId, is_active: true },
-                include: [{ model: Category }, { model: SubCategory }],
+                include: [Category, SubCategory, { model: User, as: 'seller' }],
             });
 
             console.log(`🔢 Fetched ${products.length} products for category ${req.params.categoryId}`);
@@ -121,11 +128,11 @@ const ProductController = {
     },
 
     async getProductsBySubCategory(req, res) {
-        console.log('📥 GET products by subcategory ID:', req.params.subCategoryId);
+        console.log(`\n📥 GET products by subcategory ID: ${req.params.subCategoryId}`);
         try {
             const products = await Product.findAll({
                 where: { SubCategoryId: req.params.subCategoryId, is_active: true },
-                include: [{ model: Category }, { model: SubCategory }],
+                include: [Category, SubCategory, { model: User, as: 'seller' }],
             });
 
             console.log(`🔢 Fetched ${products.length} products for subcategory ${req.params.subCategoryId}`);
@@ -140,7 +147,7 @@ const ProductController = {
     },
 
     async createProduct(req, res) {
-        console.log('📥 CREATE product with data:', req.body);
+        console.log('\n📥 CREATE product with data:', req.body);
         try {
             const {
                 name,
@@ -155,7 +162,7 @@ const ProductController = {
             } = req.body;
 
             const imageUrls = req.files?.map(file => {
-                const url = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+                const url = `/uploads/${file.filename}`;
                 console.log('📎 Uploaded image URL:', url);
                 return url;
             }) || [];
@@ -190,7 +197,7 @@ const ProductController = {
     },
 
     async updateProduct(req, res) {
-        console.log('📥 UPDATE product ID:', req.params.id, 'with data:', req.body);
+        console.log(`\n📥 UPDATE product ID: ${req.params.id}`);
         try {
             const [updated] = await Product.update(req.body, {
                 where: { id: req.params.id },
@@ -198,7 +205,7 @@ const ProductController = {
 
             if (updated) {
                 const updatedProduct = await Product.findByPk(req.params.id, {
-                    include: [{ model: Category }, { model: SubCategory }],
+                    include: [Category, SubCategory, { model: User, as: 'seller' }],
                 });
 
                 console.log('✅ Updated product found:', updatedProduct.toJSON());
@@ -218,11 +225,9 @@ const ProductController = {
     },
 
     async deleteProduct(req, res) {
-        console.log('📥 DELETE product ID:', req.params.id);
+        console.log(`\n📥 DELETE product ID: ${req.params.id}`);
         try {
-            const deleted = await Product.destroy({
-                where: { id: req.params.id },
-            });
+            const deleted = await Product.destroy({ where: { id: req.params.id } });
 
             if (deleted) {
                 console.log('✅ Product deleted:', req.params.id);
