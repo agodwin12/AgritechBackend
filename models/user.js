@@ -28,7 +28,23 @@ const User = sequelize.define('User', {
     },
     profile_image: {
         type: DataTypes.STRING,
-    }
+    },
+    bio: {
+        type: DataTypes.TEXT,
+    },
+    facebook: {
+        type: DataTypes.STRING,
+    },
+    instagram: {
+        type: DataTypes.STRING,
+    },
+    twitter: {
+        type: DataTypes.STRING,
+    },
+    tiktok: {
+        type: DataTypes.STRING,
+    },
+
 }, {
     tableName: 'users',
     timestamps: true,

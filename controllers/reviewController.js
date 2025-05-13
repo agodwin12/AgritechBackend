@@ -1,14 +1,20 @@
 const { Review, Product, User } = require('../models');
 
 const ReviewController = {
-    // Get all reviews for a product
+    // ✅ Get all reviews for a product
     async getReviews(req, res) {
         const productId = req.params.productId;
 
         try {
             const reviews = await Review.findAll({
                 where: { productId },
-                include: [{ model: User, attributes: ['id', 'full_name'] }],
+                include: [
+                    {
+                        model: User,
+                        as: 'user', // ✅ must match alias in Review.belongsTo(...)
+                        attributes: ['id', 'full_name', 'profile_image'],
+                    }
+                ],
                 order: [['createdAt', 'DESC']],
             });
 
@@ -19,19 +25,26 @@ const ReviewController = {
         }
     },
 
-    // Add a new review to a product
+    // ✅ Add a new review to a product
     async addReview(req, res) {
         const productId = req.params.productId;
         const { rating, comment } = req.body;
-        const user_id = req.user?.id || req.body.user_id; // use auth user or fallback
+        const user_id = req.user?.id || req.body.user_id; // fallback to body if no auth
 
         try {
-            // Optional: validate product exists
+            // Check if product exists
             const product = await Product.findByPk(productId);
             if (!product) {
                 return res.status(404).json({ error: 'Product not found' });
             }
 
+            // Optionally check if user already reviewed this product
+            const existing = await Review.findOne({ where: { productId, user_id } });
+            if (existing) {
+                return res.status(400).json({ error: 'You already reviewed this product.' });
+            }
+
+            // Create the review
             const newReview = await Review.create({
                 productId,
                 user_id,

@@ -37,7 +37,12 @@ const Product = sequelize.define('Product', {
     SubCategoryId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+    },
+    seller_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
     }
+
 }, {
     tableName: 'products',
     timestamps: true,
