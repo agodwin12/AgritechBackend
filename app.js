@@ -21,6 +21,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const adminProductRoutes = require('./routes/adminProductRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
 const adminForumRoutes = require('./routes/adminForumRoutes');
+const userProductRoutes = require('./routes/userProductRoutes');
 // const orderRoutes = require('./routes/orderRoutes'); // Commented out problematic route
 
 // Middleware
@@ -44,7 +45,7 @@ app.use('/api/admins', adminRoutes);
 app.use('/api/admin/products', adminProductRoutes);
 app.use('/api/admin/users', adminUserRoutes);
 app.use('/api/admin/forum', adminForumRoutes);
-
+app.use('/api', userProductRoutes);
 
 // Test database connection
 const testConnection = async () => {
