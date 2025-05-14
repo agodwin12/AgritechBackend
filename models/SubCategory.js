@@ -26,4 +26,5 @@ const SubCategory = sequelize.define('SubCategory', {
     timestamps: true,
 });
 
+
 module.exports = SubCategory;

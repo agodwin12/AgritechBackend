@@ -37,4 +37,48 @@ const registerUser = async (req, res) => {
     }
 };
 
-module.exports = { registerUser };
+const changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword, phone } = req.body;
+        const userId = req.user.id; // `req.user` is set by the auth middleware
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: 'Old and new passwords are required' });
+        }
+
+        // Find user by ID
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // If phone was sent, verify it matches user's phone
+        if (phone && user.phone !== phone) {
+            return res.status(400).json({ message: 'Phone number does not match' });
+        }
+
+        // Check old password
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Incorrect old password' });
+        }
+
+        // Hash new password
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update password
+        user.password = hashedNewPassword;
+        await user.save();
+
+        return res.status(200).json({ message: 'Password changed successfully' });
+
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+module.exports = { registerUser,
+changePassword,
+};
