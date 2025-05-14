@@ -52,6 +52,8 @@ Product.belongsTo(User, { foreignKey: 'seller_id', as: 'seller' });
 User.hasMany(Product, { foreignKey: 'seller_id', as: 'products' });
 
 
+
+
 module.exports = {
     sequelize,
     User,
