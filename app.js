@@ -17,6 +17,10 @@ const userRoutes = require('./routes/userRoutes');
 const forumRoutes = require('./routes/forumRoutes');
 const path = require('path');
 const reviewRoutes = require('./routes/reviewRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const adminProductRoutes = require('./routes/adminProductRoutes');
+const adminUserRoutes = require('./routes/adminUserRoutes');
+const adminForumRoutes = require('./routes/adminForumRoutes');
 // const orderRoutes = require('./routes/orderRoutes'); // Commented out problematic route
 
 // Middleware
@@ -36,6 +40,11 @@ app.use('/api/users', userRoutes);
 // app.use('/api/orders', orderRoutes); // Commented out problematic route
 app.use('/api/forum', forumRoutes);
 app.use('/api', reviewRoutes);
+app.use('/api/admins', adminRoutes);
+app.use('/api/admin/products', adminProductRoutes);
+app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/admin/forum', adminForumRoutes);
+
 
 // Test database connection
 const testConnection = async () => {

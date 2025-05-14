@@ -54,6 +54,7 @@ const ProductController = {
             const products = await Product.findAll({
                 where: { is_active: true },
                 include: [Category, SubCategory, { model: User, as: 'seller' }],
+                order: [['createdAt', 'DESC']],
             });
 
             console.log(`🔢 Total products fetched: ${products.length}`);
@@ -73,6 +74,7 @@ const ProductController = {
             const products = await Product.findAll({
                 where: { is_active: true, is_featured: true },
                 include: [Category, SubCategory, { model: User, as: 'seller' }],
+                order: [['createdAt', 'DESC']],
             });
 
             console.log(`🌟 Total featured products: ${products.length}`);
@@ -114,6 +116,7 @@ const ProductController = {
             const products = await Product.findAll({
                 where: { CategoryId: req.params.categoryId, is_active: true },
                 include: [Category, SubCategory, { model: User, as: 'seller' }],
+                order: [['createdAt', 'DESC']],
             });
 
             console.log(`🔢 Fetched ${products.length} products for category ${req.params.categoryId}`);
@@ -133,6 +136,7 @@ const ProductController = {
             const products = await Product.findAll({
                 where: { SubCategoryId: req.params.subCategoryId, is_active: true },
                 include: [Category, SubCategory, { model: User, as: 'seller' }],
+                order: [['createdAt', 'DESC']],
             });
 
             console.log(`🔢 Fetched ${products.length} products for subcategory ${req.params.subCategoryId}`);

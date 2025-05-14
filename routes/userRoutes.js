@@ -5,13 +5,11 @@ const path = require('path');
 
 const { registerUser } = require('../controllers/userController');
 const { getUserProfile } = require('../controllers/myProfileController');
+const { authenticate } = require('../middleware/auth'); // 🔐
 
-// Configure storage
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/'); // Make sure this folder exists
-    },
-    filename: function (req, file, cb) {
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, uniqueSuffix + path.extname(file.originalname));
     }
@@ -20,8 +18,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post('/register', upload.single('profile_image'), registerUser);
-
-router.get('/:userId/profile', getUserProfile);
-
+router.get('/:userId/profile', authenticate, getUserProfile); // 🔐 Secured
 
 module.exports = router;

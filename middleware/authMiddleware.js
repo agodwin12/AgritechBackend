@@ -1,10 +1,8 @@
-require('dotenv').config(); // Add this at the very top if not already present
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 const authenticate = (req, res, next) => {
     const authHeader = req.headers.authorization;
-
-    console.log("🔐 JWT_SECRET:", process.env.JWT_SECRET); // Should be 'agritech'
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ message: 'Authorization header missing or invalid' });
@@ -13,14 +11,19 @@ const authenticate = (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'yourSecretKey');
 
-        if (!decoded.id) {
+        if (!decoded.id || !decoded.role) {
             return res.status(401).json({ message: 'Invalid token payload' });
         }
 
-        req.user = { id: decoded.id };
-        console.log('✅ Authenticated user ID:', req.user.id);
+        req.user = {
+            id: decoded.id,
+            role: decoded.role,
+            email: decoded.email,
+        };
+
+        console.log(`✅ Authenticated ${decoded.role} ID:`, decoded.id);
         next();
     } catch (err) {
         console.error('❌ JWT verification failed:', err.message);
@@ -28,4 +31,11 @@ const authenticate = (req, res, next) => {
     }
 };
 
-module.exports = { authenticate };
+const authorizeAdmin = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
+        return next();
+    }
+    return res.status(403).json({ message: 'Access denied: Admins only' });
+};
+
+module.exports = { authenticate, authorizeAdmin };

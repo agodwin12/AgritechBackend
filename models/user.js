@@ -44,6 +44,11 @@ const User = sequelize.define('User', {
     tiktok: {
         type: DataTypes.STRING,
     },
+    role: {
+        type: DataTypes.ENUM('user', 'admin'),
+        allowNull: false,
+        defaultValue: 'user',
+    },
 
 }, {
     tableName: 'users',
