@@ -11,11 +11,9 @@ const loginUser = async (req, res) => {
         console.log("🟢 Login attempt with identifier:", identifier);
 
         if (!identifier || !password) {
-            console.log("❌ Missing identifier or password");
             return res.status(400).json({ message: 'Email/Phone and password are required' });
         }
 
-        // Find user by email or phone
         const user = await User.findOne({
             where: {
                 [Op.or]: [
@@ -26,31 +24,25 @@ const loginUser = async (req, res) => {
         });
 
         if (!user) {
-            console.log("❌ User not found");
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Compare password
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
-            console.log("❌ Incorrect password");
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Generate JWT token
         const token = jwt.sign(
             {
                 id: user.id,
                 email: user.email,
-                phone: user.phone
+                phone: user.phone,
+                role: user.role
             },
             process.env.JWT_SECRET || 'yourSecretKey',
-            { expiresIn: '7d' }
+            { expiresIn: '30d' } // Extended token lifespan
         );
 
-        console.log("✅ Login successful, token generated");
-
-        // Exclude password
         const { password: _, ...safeUserData } = user.toJSON();
 
         return res.status(200).json({

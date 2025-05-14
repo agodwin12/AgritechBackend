@@ -7,7 +7,7 @@ exports.getMessages = async (req, res) => {
     try {
         console.log('🔄 Fetching all forum messages with user data...');
         const messages = await ForumMessage.findAll({
-            order: [['createdAt', 'ASC']],
+            order: [['createdAt', 'DESC']],
             include: {
                 model: User,
                 attributes: ['id', 'full_name', 'profile_image']
