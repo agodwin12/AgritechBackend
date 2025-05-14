@@ -62,5 +62,5 @@ module.exports = {
     OrderItem,
     Cart,
     ForumMessage,
-    Review, // ✅ Include it here
+    Review,
 };

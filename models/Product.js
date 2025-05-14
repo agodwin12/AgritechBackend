@@ -20,7 +20,7 @@ const Product = sequelize.define('Product', {
         defaultValue: 0,
     },
     images: {
-        type: DataTypes.JSON, // Store array of image URLs
+        type: DataTypes.JSON, // Array of image URLs
     },
     is_featured: {
         type: DataTypes.BOOLEAN,
@@ -42,10 +42,10 @@ const Product = sequelize.define('Product', {
         type: DataTypes.INTEGER,
         allowNull: false,
     }
-
 }, {
     tableName: 'products',
     timestamps: true,
 });
+
 
 module.exports = Product;

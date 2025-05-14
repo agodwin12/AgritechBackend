@@ -102,7 +102,38 @@ const getUserProfile = async (req, res) => {
     }
 };
 
+
+const updateMyProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const allowedFields = [
+            'full_name', 'phone', 'address', 'date_of_birth', 'bio',
+            'facebook', 'instagram', 'twitter', 'tiktok', 'profile_image'
+        ];
+
+        const updates = {};
+        allowedFields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        });
+
+        await User.update(updates, { where: { id: userId } });
+
+        const updatedUser = await User.findByPk(userId, {
+            attributes: { exclude: ['password'] },
+        });
+
+        return res.status(200).json({ message: 'Profile updated', user: updatedUser });
+    } catch (error) {
+        console.error('❌ Error updating profile:', error);
+        return res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+
 module.exports = {
     getMyProfile,
     getUserProfile,
+    updateMyProfile,
 };
