@@ -22,7 +22,7 @@ const adminProductRoutes = require('./routes/adminProductRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
 const adminForumRoutes = require('./routes/adminForumRoutes');
 const userProductRoutes = require('./routes/userProductRoutes');
-// const orderRoutes = require('./routes/orderRoutes'); // Commented out problematic route
+const orderRoutes = require('./routes/orderRoutes'); // Commented out problematic route
 
 // Middleware
 app.use(cors());
@@ -38,7 +38,7 @@ app.use('/api/subcategories', subCategoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/users', userRoutes);
-// app.use('/api/orders', orderRoutes); // Commented out problematic route
+ app.use('/api/orders', orderRoutes); // Commented out problematic route
 app.use('/api/forum', forumRoutes);
 app.use('/api', reviewRoutes);
 app.use('/api/admins', adminRoutes);

@@ -57,4 +57,44 @@ const loginUser = async (req, res) => {
     }
 };
 
-module.exports = { loginUser };
+const googleLogin = async (req, res) => {
+    try {
+        const { email, full_name, profile_image } = req.body;
+
+        if (!email || !full_name) {
+            return res.status(400).json({ message: 'Missing email or name' });
+        }
+
+        let user = await User.findOne({ where: { email } });
+
+        if (!user) {
+            user = await User.create({
+                email,
+                full_name,
+                phone: '0000000000', // dummy phone (since it's required)
+                password: 'google_oauth_login', // dummy password (not used)
+                profile_image,
+                role: 'user',
+            });
+        }
+
+        const token = jwt.sign(
+            {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+            },
+            process.env.JWT_SECRET || 'yourSecretKey',
+            { expiresIn: '30d' }
+        );
+
+        const { password, ...userSafe } = user.toJSON();
+
+        return res.status(200).json({ token, user: userSafe });
+    } catch (error) {
+        console.error('🔥 Google login error:', error);
+        return res.status(500).json({ message: 'Google login failed', error: error.message });
+    }
+};
+
+module.exports = { loginUser, googleLogin };
