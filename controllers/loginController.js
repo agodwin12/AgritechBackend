@@ -97,4 +97,62 @@ const googleLogin = async (req, res) => {
     }
 };
 
-module.exports = { loginUser, googleLogin };
+
+const forgotPassword = async (req, res) => {
+    const { identifier } = req.body; // can be email or phone
+
+    try {
+        const user = await User.findOne({
+            where: {
+                [Op.or]: [
+                    { email: identifier },
+                    { phone: identifier }
+                ]
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Create reset token (valid for 15 mins)
+        const resetToken = jwt.sign(
+            { id: user.id },
+            process.env.JWT_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        // Return reset token to frontend (for testing/dev)
+        res.status(200).json({
+            message: 'Reset token generated successfully',
+            resetToken
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    const { resetToken, newPassword } = req.body;
+
+    try {
+        const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
+        const userId = decoded.id;
+
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+
+        res.status(200).json({ message: 'Password has been reset successfully' });
+    } catch (error) {
+        res.status(400).json({ message: 'Invalid or expired token', error: error.message });
+    }
+};
+
+
+module.exports = { loginUser, googleLogin, forgotPassword, resetPassword };
