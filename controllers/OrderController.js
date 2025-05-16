@@ -3,6 +3,32 @@ const { Order, OrderItem, Cart, Product, User, Category, SubCategory, sequelize 
 const { v4: uuidv4 } = require('uuid');
 
 const OrderController = {
+
+        //admins
+    // controllers/OrderController.js
+    async getAllOrders(req, res) {
+        try {
+            const orders = await Order.findAll({
+                include: [
+                    {
+                        model: OrderItem,
+                        include: [{ model: Product }],
+                    },
+                    {
+                        model: User,
+                        attributes: ['id', 'full_name', 'phone', 'email'], // include name & phone
+                    },
+                ],
+                order: [['createdAt', 'DESC']],
+            });
+
+            return res.status(200).json(orders);
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
+    }
+    ,
+
     // Get all orders for a user
     async getUserOrders(req, res) {
         try {
@@ -143,32 +169,35 @@ const OrderController = {
         }
     },
 
-    // Update order status (admin only)
+
+// Update order status and/or payment status (admin only)
     async updateOrderStatus(req, res) {
         try {
             const { status, payment_status } = req.body;
 
-            const [updated] = await Order.update({
-                status: status || undefined,
-                payment_status: payment_status || undefined
-            }, {
-                where: { id: req.params.id }
-            });
-
-            if (updated) {
-                const updatedOrder = await Order.findByPk(req.params.id, {
-                    include: [
-                        {
-                            model: OrderItem,
-                            include: [Product]
-                        }
-                    ]
-                });
-                return res.status(200).json(updatedOrder);
+            const order = await Order.findByPk(req.params.id);
+            if (!order) {
+                return res.status(404).json({ message: 'Order not found' });
             }
 
-            return res.status(404).json({ message: 'Order not found' });
+            if (status) order.status = status;
+            if (payment_status) order.payment_status = payment_status;
+
+            await order.save();
+
+            const updatedOrder = await Order.findByPk(req.params.id, {
+                include: [
+                    {
+                        model: OrderItem,
+                        include: [Product],
+                    },
+                    User,
+                ],
+            });
+
+            return res.status(200).json(updatedOrder);
         } catch (error) {
+            console.error('❌ Error updating order:', error.message);
             return res.status(500).json({ error: error.message });
         }
     },
