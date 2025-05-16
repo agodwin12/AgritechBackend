@@ -1,11 +1,20 @@
-// controllers/OrderController.js
-const { Order, OrderItem, Cart, Product, User, Category, SubCategory, sequelize } = require('../models');
+const {
+    Order,
+    OrderItem,
+    Cart,
+    Product,
+    User,
+    Category,
+    SubCategory,
+    sequelize
+} = require('../models');
 const { v4: uuidv4 } = require('uuid');
 
-const OrderController = {
+const VALID_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+const VALID_PAYMENT_STATUSES = ['unpaid', 'paid', 'refunded'];
 
-        //admins
-    // controllers/OrderController.js
+const OrderController = {
+    // ADMIN: Get all orders
     async getAllOrders(req, res) {
         try {
             const orders = await Order.findAll({
@@ -16,7 +25,7 @@ const OrderController = {
                     },
                     {
                         model: User,
-                        attributes: ['id', 'full_name', 'phone', 'email'], // include name & phone
+                        attributes: ['id', 'full_name', 'phone', 'email'],
                     },
                 ],
                 order: [['createdAt', 'DESC']],
@@ -26,15 +35,25 @@ const OrderController = {
         } catch (error) {
             return res.status(500).json({ error: error.message });
         }
-    }
-    ,
+    },
 
-    // Get all orders for a user
+    // USER: Get their orders
     async getUserOrders(req, res) {
         try {
             const orders = await Order.findAll({
                 where: { UserId: req.user.id },
-                order: [['createdAt', 'DESC']]
+                include: [
+                    {
+                        model: OrderItem,
+                        include: [
+                            {
+                                model: Product,
+                                include: [Category, SubCategory],
+                            },
+                        ],
+                    },
+                ],
+                order: [['createdAt', 'DESC']],
             });
             return res.status(200).json(orders);
         } catch (error) {
@@ -42,13 +61,13 @@ const OrderController = {
         }
     },
 
-    // Get order details
+    // USER: Get one order
     async getOrderById(req, res) {
         try {
             const order = await Order.findOne({
                 where: {
                     id: req.params.id,
-                    UserId: req.user.id
+                    UserId: req.user.id,
                 },
                 include: [
                     {
@@ -56,14 +75,11 @@ const OrderController = {
                         include: [
                             {
                                 model: Product,
-                                include: [
-                                    { model: Category },
-                                    { model: SubCategory }
-                                ]
-                            }
-                        ]
-                    }
-                ]
+                                include: [Category, SubCategory],
+                            },
+                        ],
+                    },
+                ],
             });
 
             if (!order) {
@@ -76,26 +92,22 @@ const OrderController = {
         }
     },
 
-    // Create a new order
+    // USER: Place new order
     async createOrder(req, res) {
         const t = await sequelize.transaction();
 
         try {
             const { shipping_address, shipping_method, payment_method, notes } = req.body;
 
-            // Get cart items
             const cartItems = await Cart.findAll({
                 where: { UserId: req.user.id },
                 include: [
                     {
                         model: Product,
-                        include: [
-                            { model: Category },
-                            { model: SubCategory }
-                        ]
-                    }
+                        include: [Category, SubCategory],
+                    },
                 ],
-                transaction: t
+                transaction: t,
             });
 
             if (cartItems.length === 0) {
@@ -103,9 +115,13 @@ const OrderController = {
                 return res.status(400).json({ message: 'Cart is empty' });
             }
 
-            // Calculate total
+            // Total calculation and stock check
             let total_amount = 0;
             for (const item of cartItems) {
+                if (item.Product.stock_quantity < item.quantity) {
+                    await t.rollback();
+                    return res.status(400).json({ message: `Insufficient stock for ${item.Product.name}` });
+                }
                 total_amount += item.Product.price * item.quantity;
             }
 
@@ -117,34 +133,29 @@ const OrderController = {
                 shipping_address,
                 shipping_method,
                 payment_method,
-                notes
+                notes,
             }, { transaction: t });
 
-            // Create order items
+            // Create order items + update stock
             for (const item of cartItems) {
                 await OrderItem.create({
                     OrderId: order.id,
                     ProductId: item.ProductId,
                     quantity: item.quantity,
                     price: item.Product.price,
-                    subtotal: item.Product.price * item.quantity
+                    subtotal: item.Product.price * item.quantity,
                 }, { transaction: t });
 
-                // Update product stock
                 const product = await Product.findByPk(item.ProductId, { transaction: t });
                 product.stock_quantity -= item.quantity;
                 await product.save({ transaction: t });
             }
 
             // Clear cart
-            await Cart.destroy({
-                where: { UserId: req.user.id },
-                transaction: t
-            });
+            await Cart.destroy({ where: { UserId: req.user.id }, transaction: t });
 
             await t.commit();
 
-            // Get complete order with items
             const completeOrder = await Order.findByPk(order.id, {
                 include: [
                     {
@@ -152,14 +163,11 @@ const OrderController = {
                         include: [
                             {
                                 model: Product,
-                                include: [
-                                    { model: Category },
-                                    { model: SubCategory }
-                                ]
-                            }
-                        ]
-                    }
-                ]
+                                include: [Category, SubCategory],
+                            },
+                        ],
+                    },
+                ],
             });
 
             return res.status(201).json(completeOrder);
@@ -169,8 +177,7 @@ const OrderController = {
         }
     },
 
-
-// Update order status and/or payment status (admin only)
+    // ADMIN: Update order status/payment status
     async updateOrderStatus(req, res) {
         try {
             const { status, payment_status } = req.body;
@@ -180,12 +187,24 @@ const OrderController = {
                 return res.status(404).json({ message: 'Order not found' });
             }
 
+            if (order.status === 'cancelled') {
+                return res.status(400).json({ message: 'Cancelled orders cannot be modified' });
+            }
+
+            if (status && !VALID_STATUSES.includes(status)) {
+                return res.status(400).json({ message: 'Invalid status' });
+            }
+
+            if (payment_status && !VALID_PAYMENT_STATUSES.includes(payment_status)) {
+                return res.status(400).json({ message: 'Invalid payment status' });
+            }
+
             if (status) order.status = status;
             if (payment_status) order.payment_status = payment_status;
 
             await order.save();
 
-            const updatedOrder = await Order.findByPk(req.params.id, {
+            const updatedOrder = await Order.findByPk(order.id, {
                 include: [
                     {
                         model: OrderItem,
@@ -197,12 +216,11 @@ const OrderController = {
 
             return res.status(200).json(updatedOrder);
         } catch (error) {
-            console.error('❌ Error updating order:', error.message);
             return res.status(500).json({ error: error.message });
         }
     },
 
-    // Cancel order
+    // USER: Cancel order (if pending or processing only)
     async cancelOrder(req, res) {
         const t = await sequelize.transaction();
 
@@ -211,24 +229,21 @@ const OrderController = {
                 where: {
                     id: req.params.id,
                     UserId: req.user.id,
-                    status: ['pending', 'processing']
+                    status: ['pending', 'processing'],
                 },
                 include: [OrderItem],
-                transaction: t
+                transaction: t,
             });
 
             if (!order) {
                 await t.rollback();
-                return res.status(404).json({
-                    message: 'Order not found or cannot be cancelled'
-                });
+                return res.status(404).json({ message: 'Order not found or cannot be cancelled' });
             }
 
-            // Update order status
             order.status = 'cancelled';
             await order.save({ transaction: t });
 
-            // Restore product stock
+            // Restore stock
             for (const item of order.OrderItems) {
                 const product = await Product.findByPk(item.ProductId, { transaction: t });
                 product.stock_quantity += item.quantity;
@@ -237,7 +252,16 @@ const OrderController = {
 
             await t.commit();
 
-            return res.status(200).json(order);
+            const updatedOrder = await Order.findByPk(order.id, {
+                include: [
+                    {
+                        model: OrderItem,
+                        include: [Product],
+                    },
+                ],
+            });
+
+            return res.status(200).json(updatedOrder);
         } catch (error) {
             await t.rollback();
             return res.status(500).json({ error: error.message });
