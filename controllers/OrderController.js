@@ -9,11 +9,45 @@ const {
     sequelize
 } = require('../models');
 const { v4: uuidv4 } = require('uuid');
+const { Op } = require('sequelize');
 
 const VALID_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 const VALID_PAYMENT_STATUSES = ['unpaid', 'paid', 'refunded'];
 
 const OrderController = {
+
+    // controllers/OrderController.js
+
+    async getOrdersForMyProducts(req, res) {
+        try {
+            const orders = await Order.findAll({
+                include: [
+                    {
+                        model: OrderItem,
+                        include: [
+                            {
+                                model: Product,
+                                where: { seller_id: req.user.id },
+                                // ✅ Only products owned by the seller
+                                required: true, // ✅ Ensures we only include orders with seller's products
+                            },
+                        ],
+                    },
+                    {
+                        model: User, // 🧾 Buyer details
+                        attributes: ['id', 'full_name', 'phone', 'email'],
+                    },
+                ],
+                order: [['createdAt', 'DESC']],
+            });
+
+            return res.status(200).json(orders);
+        } catch (error) {
+            console.error('❌ Error fetching seller product orders:', error.message);
+            return res.status(500).json({ error: error.message });
+        }
+    },
+
     // ADMIN: Get all orders
     async getAllOrders(req, res) {
         try {
@@ -229,7 +263,7 @@ const OrderController = {
                 where: {
                     id: req.params.id,
                     UserId: req.user.id,
-                    status: ['pending', 'processing'],
+                    status: { [Op.in]: ['pending', 'processing'] }
                 },
                 include: [OrderItem],
                 transaction: t,
@@ -268,5 +302,9 @@ const OrderController = {
         }
     }
 };
+
+// controllers/OrderController.js
+
+
 
 module.exports = OrderController;

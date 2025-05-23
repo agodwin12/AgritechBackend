@@ -55,4 +55,13 @@ const User = sequelize.define('User', {
     timestamps: true,
 });
 
+User.associate = (models) => {
+    User.hasMany(models.Product, { foreignKey: 'seller_id', as: 'products' });
+    User.hasMany(models.Order);
+    User.hasMany(models.Cart);
+    User.hasMany(models.Review, { foreignKey: 'user_id', as: 'reviews' });
+    User.hasMany(models.ForumMessage, { foreignKey: 'user_id' });
+    User.hasMany(models.BlogPost, { foreignKey: 'UserId', as: 'blogPosts' });
+};
+
 module.exports = User;
