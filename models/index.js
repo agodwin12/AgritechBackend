@@ -10,6 +10,12 @@ const OrderItem = require('./OrderItem');
 const Cart = require('./Cart');
 const ForumMessage = require('./ForumMessage');
 const Review = require('./review')(sequelize, DataTypes);
+const EbookCategory = require('./EbookCategory');
+const Ebook = require('./Ebook');
+const EbookOrder = require('./EbookOrder');
+const VideoCategory = require('./VideoCategory');
+const VideoTip = require('./VideoTip');
+
 
 // Associations
 Category.hasMany(SubCategory, { foreignKey: 'category_id' });
@@ -52,6 +58,25 @@ Product.belongsTo(User, { foreignKey: 'seller_id', as: 'seller' });
 User.hasMany(Product, { foreignKey: 'seller_id', as: 'products' });
 
 
+// ✅ EBOOK ASSOCIATIONS
+User.hasMany(Ebook, { foreignKey: 'author_id' });
+Ebook.belongsTo(User, { foreignKey: 'author_id' });
+
+EbookCategory.hasMany(Ebook, { foreignKey: 'category_id' });
+Ebook.belongsTo(EbookCategory, { foreignKey: 'category_id' });
+
+User.hasMany(EbookOrder, { foreignKey: 'user_id' });
+EbookOrder.belongsTo(User, { foreignKey: 'user_id' });
+
+Ebook.hasMany(EbookOrder, { foreignKey: 'ebook_id' });
+EbookOrder.belongsTo(Ebook, { foreignKey: 'ebook_id' });
+
+// ✅ VIDEO ASSOCIATIONS
+User.hasMany(VideoTip, { foreignKey: 'uploaded_by' });
+VideoTip.belongsTo(User, { foreignKey: 'uploaded_by' });
+
+VideoCategory.hasMany(VideoTip, { foreignKey: 'category_id' });
+VideoTip.belongsTo(VideoCategory, { foreignKey: 'category_id' });
 
 
 module.exports = {
@@ -65,4 +90,9 @@ module.exports = {
     Cart,
     ForumMessage,
     Review,
+    EbookCategory,
+    Ebook,
+    EbookOrder,
+    VideoCategory,
+    VideoTip,
 };

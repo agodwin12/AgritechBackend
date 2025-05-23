@@ -22,7 +22,9 @@ const adminProductRoutes = require('./routes/adminProductRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
 const adminForumRoutes = require('./routes/adminForumRoutes');
 const userProductRoutes = require('./routes/userProductRoutes');
-const orderRoutes = require('./routes/orderRoutes'); // Commented out problematic route
+const orderRoutes = require('./routes/orderRoutes');
+const ebookRoutes = require('./routes/ebookRoutes');
+const videoRoutes = require('./routes/videoRoutes');
 
 // Middleware
 app.use(cors());
@@ -46,6 +48,10 @@ app.use('/api/admin/products', adminProductRoutes);
 app.use('/api/admin/users', adminUserRoutes);
 app.use('/api/admin/forum', adminForumRoutes);
 app.use('/api', userProductRoutes);
+app.use('/api', ebookRoutes);
+app.use('/api', videoRoutes);
+
+
 
 // Test database connection
 const testConnection = async () => {
