@@ -3,10 +3,10 @@ const app = express();
 const cors = require('cors');
 require('dotenv').config();
 
-// Import sequelize directly from your config file
+
 const sequelize = require('./config/db');
 
-// Route imports
+// Routes
 const authRoutes = require('./routes/auth');
 const myProfileRoutes = require('./routes/myProfileRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
@@ -40,7 +40,7 @@ app.use('/api/subcategories', subCategoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/users', userRoutes);
- app.use('/api/orders', orderRoutes); // Commented out problematic route
+ app.use('/api/orders', orderRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api', reviewRoutes);
 app.use('/api/admins', adminRoutes);
@@ -48,8 +48,8 @@ app.use('/api/admin/products', adminProductRoutes);
 app.use('/api/admin/users', adminUserRoutes);
 app.use('/api/admin/forum', adminForumRoutes);
 app.use('/api', userProductRoutes);
-app.use('/api', ebookRoutes);
-app.use('/api', videoRoutes);
+app.use('/api/ebooks', ebookRoutes);
+app.use('/api/videos', videoRoutes);
 
 
 

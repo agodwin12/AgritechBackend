@@ -17,7 +17,7 @@ const fileFilter = function (req, file, cb) {
     const allowedExtensions = [
         '.jpg', '.jpeg', '.png', '.gif',     // Images
         '.mp4', '.mov', '.avi', '.webm', '.mkv' ,// Videos
-        '.pdf', '.epub' ,'.docx',
+        '.pdf', '.epub' ,'.docx', '.mov',
     ];
     const ext = path.extname(file.originalname).toLowerCase();
 

@@ -17,7 +17,7 @@ const Ebook = sequelize.define('Ebook', {
     },
     file_url: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     cover_image: {
         type: DataTypes.STRING,

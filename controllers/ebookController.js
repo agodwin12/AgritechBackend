@@ -1,84 +1,114 @@
 const { Ebook, EbookCategory, EbookOrder, User } = require('../models');
 
 const ebookController = {
-    // Create Ebook
     async uploadEbook(req, res) {
         try {
+            console.log('Uploading ebook:', req.body);
+
             const { title, description, price, category_id } = req.body;
-            const file_url = req.file?.path || req.body.file_url; // From multer or frontend
+
+            if (!title || !description || !price || !category_id) {
+                return res.status(400).json({ error: 'Missing required fields.' });
+            }
+
+            const file_url = req.file?.path || req.body.file_url || null; // Optional PDF
             const cover_image = req.body.cover_image || null;
 
             const ebook = await Ebook.create({
                 title,
                 description,
                 price,
-                file_url,
+                file_url,       // Can be null
                 cover_image,
                 author_id: req.user.id,
                 category_id,
                 is_approved: false,
             });
 
-            res.status(201).json({ message: 'Ebook submitted for review.', ebook });
+            console.log('Ebook created:', ebook);
+            res.status(201).json({
+                message: 'Ebook submitted for review. PDF upload can be done later.',
+                ebook,
+            });
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            console.error('Error uploading ebook:', err);
+            res.status(500).json({ error: 'Server error while uploading ebook.' });
         }
     },
 
-    // List all approved ebooks
+
     async listApprovedEbooks(req, res) {
         try {
+            const approved = req.query.approved;
+            const whereClause = {};
+            if (approved === 'false') {
+                whereClause.is_approved = false;
+            } else {
+                whereClause.is_approved = true;
+            }
+
+            console.log('Fetching ebooks with filter:', whereClause);
             const ebooks = await Ebook.findAll({
-                where: { is_approved: true },
-                include: [EbookCategory, User]
+                where: whereClause,
+                include: [EbookCategory, User],
             });
+
+            console.log('Ebooks fetched:', ebooks.length);
             res.json(ebooks);
         } catch (err) {
+            console.error('Error listing ebooks:', err);
             res.status(500).json({ error: err.message });
         }
     },
 
-    // Admin: Approve Ebook
     async approveEbook(req, res) {
         try {
             const { id } = req.params;
+            console.log('Approving ebook with ID:', id);
             const ebook = await Ebook.findByPk(id);
             if (!ebook) return res.status(404).json({ error: 'Ebook not found' });
 
             ebook.is_approved = true;
             await ebook.save();
 
+            console.log('Ebook approved:', ebook);
             res.json({ message: 'Ebook approved.' });
         } catch (err) {
+            console.error('Error approving ebook:', err);
             res.status(500).json({ error: err.message });
         }
     },
 
-    // Admin: Create Category
     async createEbookCategory(req, res) {
         try {
+            console.log('Creating ebook category:', req.body);
             const { name, description } = req.body;
             const category = await EbookCategory.create({ name, description });
+
+            console.log('Category created:', category);
             res.status(201).json(category);
         } catch (err) {
+            console.error('Error creating category:', err);
             res.status(500).json({ error: err.message });
         }
     },
 
-    // Get all categories
     async getEbookCategories(req, res) {
         try {
+            console.log('Fetching active ebook categories');
             const categories = await EbookCategory.findAll({ where: { is_active: true } });
             res.json(categories);
         } catch (err) {
+            console.error('Error fetching categories:', err);
             res.status(500).json({ error: err.message });
         }
     },
 
-    // Purchase Ebook
     async purchaseEbook(req, res) {
         try {
             const { ebook_id } = req.body;
+            console.log('User', req.user.id, 'attempting to purchase ebook:', ebook_id);
+
             const ebook = await Ebook.findByPk(ebook_id);
             if (!ebook || !ebook.is_approved) return res.status(400).json({ error: 'Ebook not available' });
 
@@ -94,23 +124,27 @@ const ebookController = {
                 price_paid: ebook.price
             });
 
+            console.log('Ebook purchased:', order);
             res.status(201).json({ message: 'Purchase successful', order });
         } catch (err) {
+            console.error('Error purchasing ebook:', err);
             res.status(500).json({ error: err.message });
         }
     },
 
-
     async updateEbook(req, res) {
         try {
             const { id } = req.params;
+            console.log('User', req.user.id, 'attempting to update ebook:', id);
             const ebook = await Ebook.findByPk(id);
             if (!ebook || ebook.author_id !== req.user.id)
                 return res.status(403).json({ error: 'Not allowed' });
 
             await ebook.update(req.body);
+            console.log('Ebook updated:', ebook);
             res.json({ message: 'Ebook updated', ebook });
         } catch (err) {
+            console.error('Error updating ebook:', err);
             res.status(500).json({ error: err.message });
         }
     },
@@ -118,41 +152,19 @@ const ebookController = {
     async deleteEbook(req, res) {
         try {
             const { id } = req.params;
+            console.log('User', req.user.id, 'attempting to delete ebook:', id);
             const ebook = await Ebook.findByPk(id);
             if (!ebook || ebook.author_id !== req.user.id)
                 return res.status(403).json({ error: 'Not allowed' });
 
             await ebook.destroy();
+            console.log('Ebook deleted');
             res.json({ message: 'Ebook deleted' });
         } catch (err) {
+            console.error('Error deleting ebook:', err);
             res.status(500).json({ error: err.message });
         }
     },
-    async listApprovedEbooks(req, res) {
-        try {
-            const approved = req.query.approved;
-
-            const whereClause = {};
-            if (approved === 'false') {
-                whereClause.is_approved = false;
-            } else {
-                whereClause.is_approved = true;
-            }
-
-            const ebooks = await Ebook.findAll({
-                where: whereClause,
-                include: [EbookCategory, User],
-            });
-
-            res.json(ebooks);
-        } catch (err) {
-            res.status(500).json({ error: err.message });
-        }
-    }
-
-
 };
-
-
 
 module.exports = ebookController;
