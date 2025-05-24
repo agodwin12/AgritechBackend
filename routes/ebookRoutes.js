@@ -4,10 +4,15 @@ const ebookController = require('../controllers/ebookController');
 const { authenticate, authorizeAdmin } = require('../middleware/authMiddleware');
 
 // ✅ User uploads ebook (protected)
-router.post('/ebooks', authenticate, ebookController.uploadEbook);
+router.post('/', authenticate, ebookController.uploadEbook);
 
-// ✅ Public access to list all approved ebooks
-router.get('/ebooks', ebookController.listApprovedEbooks);
+
+
+router.get('/', ebookController.listApprovedEbooks); // ✅ co
+
+
+
+
 
 // ✅ Admin approves ebook
 router.put('/ebooks/:id/approve', authenticate, authorizeAdmin, ebookController.approveEbook);
@@ -16,7 +21,7 @@ router.put('/ebooks/:id/approve', authenticate, authorizeAdmin, ebookController.
 router.post('/ebooks/categories', authenticate, authorizeAdmin, ebookController.createEbookCategory);
 
 // ✅ Get all categories (public or authenticated)
-router.get('/ebooks/categories', ebookController.getEbookCategories);
+router.get('/categories', ebookController.getEbookCategories);
 
 // ✅ User purchases an ebook
 router.post('/ebooks/purchase', authenticate, ebookController.purchaseEbook);

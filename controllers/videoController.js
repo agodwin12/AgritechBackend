@@ -1,32 +1,49 @@
 const { VideoTip, VideoCategory, User } = require('../models');
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' })
+const upload = multer({ dest: 'uploads/' });
 const { authenticate } = require('../middleware/authMiddleware');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+ffmpeg.setFfmpegPath(ffmpegPath);
+
 
 const videoController = {
     // ✅ Create a video tip
     async uploadVideo(req, res) {
         try {
+            console.log("Uploading video...");
             const { title, description, category_id } = req.body;
+            console.log("Request body:", req.body);
+
             const videoFile = req.files?.video_url?.[0];
+            console.log("Uploaded file info:", videoFile);
 
-            if (!videoFile) return res.status(400).json({ error: 'Video file required' });
+            if (!videoFile) {
+                console.log("No video file provided.");
+                return res.status(400).json({ error: 'Video file required' });
+            }
 
-            // Generate thumbnail
             const thumbnailPath = `uploads/thumbnails/${Date.now()}_thumbnail.png`;
+            console.log("Thumbnail will be saved to:", thumbnailPath);
+
             await new Promise((resolve, reject) => {
                 ffmpeg(videoFile.path)
-                    .on('end', resolve)
-                    .on('error', reject)
+                    .on('end', () => {
+                        console.log("Thumbnail generated.");
+                        resolve();
+                    })
+                    .on('error', (err) => {
+                        console.error("FFmpeg error:", err);
+                        reject(err);
+                    })
                     .screenshots({
                         count: 1,
                         folder: path.dirname(thumbnailPath),
                         filename: path.basename(thumbnailPath),
                         size: '320x240',
-                        timemarks: ['9']
+                        timemarks: ['3']
                     });
             });
 
@@ -39,8 +56,11 @@ const videoController = {
                 uploaded_by: req.user.id,
             });
 
+            console.log("Video record created:", video.toJSON());
+
             res.status(201).json({ message: 'Video uploaded and awaiting approval', video });
         } catch (err) {
+            console.error("Upload error:", err);
             res.status(500).json({ error: err.message });
         }
     },
@@ -48,9 +68,12 @@ const videoController = {
     // ✅ Get all approved videos or filter by category
     async getApprovedVideos(req, res) {
         try {
+            console.log("Fetching approved videos...");
             const whereClause = { is_approved: true };
+
             if (req.query.category) {
                 whereClause['$VideoCategory.name$'] = req.query.category;
+                console.log("Filtering by category:", req.query.category);
             }
 
             const videos = await VideoTip.findAll({
@@ -58,8 +81,10 @@ const videoController = {
                 include: [VideoCategory, User],
             });
 
+            console.log(`Fetched ${videos.length} videos`);
             res.json(videos);
         } catch (err) {
+            console.error("Get approved videos error:", err);
             res.status(500).json({ error: err.message });
         }
     },
@@ -67,14 +92,21 @@ const videoController = {
     // ✅ Approve a video (Admin)
     async approveVideo(req, res) {
         try {
+            console.log("Approving video with ID:", req.params.id);
             const video = await VideoTip.findByPk(req.params.id);
-            if (!video) return res.status(404).json({ error: 'Video not found' });
+
+            if (!video) {
+                console.log("Video not found.");
+                return res.status(404).json({ error: 'Video not found' });
+            }
 
             video.is_approved = true;
             await video.save();
 
+            console.log("Video approved:", video.toJSON());
             res.json({ message: 'Video approved', video });
         } catch (err) {
+            console.error("Approve video error:", err);
             res.status(500).json({ error: err.message });
         }
     },
@@ -82,10 +114,14 @@ const videoController = {
     // ✅ Create category (Admin)
     async createCategory(req, res) {
         try {
+            console.log("Creating category with data:", req.body);
             const { name, description } = req.body;
             const category = await VideoCategory.create({ name, description });
+
+            console.log("Category created:", category.toJSON());
             res.status(201).json(category);
         } catch (err) {
+            console.error("Create category error:", err);
             res.status(500).json({ error: err.message });
         }
     },
@@ -93,9 +129,13 @@ const videoController = {
     // ✅ Get all categories
     async getCategories(req, res) {
         try {
+            console.log("Fetching all active categories...");
             const categories = await VideoCategory.findAll({ where: { is_active: true } });
+
+            console.log(`Fetched ${categories.length} categories`);
             res.json(categories);
         } catch (err) {
+            console.error("Get categories error:", err);
             res.status(500).json({ error: err.message });
         }
     },
@@ -103,32 +143,46 @@ const videoController = {
     // User deletes their own video
     async deleteVideo(req, res) {
         try {
+            console.log("Attempting to delete video with ID:", req.params.id);
             const video = await VideoTip.findByPk(req.params.id);
-            if (!video) return res.status(404).json({ error: 'Video not found' });
 
-            // Only the uploader can delete
+            if (!video) {
+                console.log("Video not found.");
+                return res.status(404).json({ error: 'Video not found' });
+            }
+
             if (video.uploaded_by !== req.user.id) {
+                console.log("User not authorized to delete this video.");
                 return res.status(403).json({ error: 'Not allowed' });
             }
 
             await video.destroy();
+            console.log("Video deleted.");
             res.json({ message: 'Video deleted successfully' });
         } catch (err) {
+            console.error("Delete video error:", err);
             res.status(500).json({ error: err.message });
         }
     },
+
     async rejectVideo(req, res) {
         try {
+            console.log("Rejecting video with ID:", req.params.id);
             const video = await VideoTip.findByPk(req.params.id);
-            if (!video) return res.status(404).json({ error: 'Video not found' });
 
-            await video.destroy(); // or add `is_rejected` flag if you want to track rejections
+            if (!video) {
+                console.log("Video not found.");
+                return res.status(404).json({ error: 'Video not found' });
+            }
+
+            await video.destroy(); // Or flag with `is_rejected`
+            console.log("Video rejected and removed.");
             res.json({ message: 'Video rejected and removed' });
         } catch (err) {
+            console.error("Reject video error:", err);
             res.status(500).json({ error: err.message });
         }
     }
-
 };
 
 module.exports = videoController;

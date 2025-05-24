@@ -5,14 +5,16 @@ const { authenticate, authorizeAdmin } = require('../middleware/authMiddleware')
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 
-// Create a video tip
-router.post('/videos', authenticate, upload.fields([
-    { name: 'video_url', maxCount: 1 },
+
+
+router.post('/', authenticate, upload.fields([  { name: 'video_url', maxCount: 1 },
     { name: 'thumbnail_image', maxCount: 1 },
 ]), videoController.uploadVideo);
 
-// Get all approved videos or filter by category
-router.get('/videos', videoController.getApprovedVideos);
+
+router.get('/', videoController.getApprovedVideos); // ✅ correct
+
+
 
 router.delete('/videos/:id', authenticate, videoController.deleteVideo);
 
@@ -23,6 +25,7 @@ router.delete('/videos/:id/reject', authenticate, authorizeAdmin, videoControlle
 
 // Video Categories
 router.post('/videos/categories', authenticate, authorizeAdmin, videoController.createCategory);
-router.get('/videos/categories', videoController.getCategories);
+router.get('/categories', videoController.getCategories); // ✅ correct
+
 
 module.exports = router;
