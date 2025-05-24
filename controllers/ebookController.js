@@ -3,7 +3,8 @@ const { Ebook, EbookCategory, EbookOrder, User } = require('../models');
 const ebookController = {
     async uploadEbook(req, res) {
         try {
-            console.log('Uploading ebook:', req.body);
+            console.log('📝 Incoming ebook request:', req.body);
+            console.log('📎 Uploaded files:', req.files);
 
             const { title, description, price, category_id } = req.body;
 
@@ -11,30 +12,39 @@ const ebookController = {
                 return res.status(400).json({ error: 'Missing required fields.' });
             }
 
-            const file_url = req.file?.path || req.body.file_url || null; // Optional PDF
-            const cover_image = req.body.cover_image || null;
+            // Handle uploaded files
+            const coverImageFile = req.files?.cover_image?.[0];
+            const pdfFile = req.files?.file?.[0];
+
+            if (!coverImageFile) {
+                return res.status(400).json({ error: 'Cover image is required.' });
+            }
+
+            const cover_image = coverImageFile.path; // full path to uploaded file
+            const file_url = pdfFile ? pdfFile.path : null;
 
             const ebook = await Ebook.create({
                 title,
                 description,
                 price,
-                file_url,       // Can be null
+                file_url,
                 cover_image,
-                author_id: req.user.id,
+                author_id: req.user.id, // assuming `req.user` is populated by auth middleware
                 category_id,
                 is_approved: false,
             });
 
-            console.log('Ebook created:', ebook);
+            console.log('✅ Ebook created:', ebook);
             res.status(201).json({
-                message: 'Ebook submitted for review. PDF upload can be done later.',
+                message: 'Ebook submitted for review.',
                 ebook,
             });
         } catch (err) {
-            console.error('Error uploading ebook:', err);
+            console.error('❌ Error uploading ebook:', err);
             res.status(500).json({ error: 'Server error while uploading ebook.' });
         }
-    },
+    }
+    ,
 
 
     async listApprovedEbooks(req, res) {
