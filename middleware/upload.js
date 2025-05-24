@@ -1,7 +1,7 @@
 const multer = require('multer');
 const path = require('path');
 
-// Storage setup
+// === Storage config ===
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/');
@@ -12,29 +12,29 @@ const storage = multer.diskStorage({
     },
 });
 
-// File filter to accept images and videos
+// === File filter ===
 const fileFilter = function (req, file, cb) {
     const allowedExtensions = [
-        '.jpg', '.jpeg', '.png', '.gif',     // Images
-        '.mp4', '.mov', '.avi', '.webm', '.mkv' ,// Videos
-        '.pdf', '.epub' ,'.docx', '.mov',
+        '.jpg', '.jpeg', '.png', '.gif',          // images
+        '.mp4', '.mov', '.avi', '.webm', '.mkv',  // videos
+        '.pdf', '.epub', '.docx',                 // documents
     ];
     const ext = path.extname(file.originalname).toLowerCase();
 
     if (allowedExtensions.includes(ext)) {
         cb(null, true);
     } else {
-        cb(new Error('Only image and video files are allowed'));
+        cb(new Error('Only image, video, and document files are allowed'));
     }
 };
 
-// Multer instance with optional file size limit
+// === Multer instance ===
 const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
+    storage,
+    fileFilter,
     limits: {
-        fileSize: 50 * 1024 * 1024, // Max 50MB
-    }
+        fileSize: 50 * 1024 * 1024, // 50 MB max
+    },
 });
 
 module.exports = upload;
