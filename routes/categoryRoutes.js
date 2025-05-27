@@ -13,4 +13,5 @@ router.post('/', authenticate, CategoryController.createCategory);
 router.put('/:id', authenticate, CategoryController.updateCategory);
 router.delete('/:id', authenticate, CategoryController.deleteCategory);
 
+router.get('/top', CategoryController.getTopCategories);
 module.exports = router;
