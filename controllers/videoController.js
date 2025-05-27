@@ -182,6 +182,44 @@ const videoController = {
             console.error("Reject video error:", err);
             res.status(500).json({ error: err.message });
         }
+    },
+
+    async getRandomApprovedVideo(req, res) {
+        try {
+            console.log("🎥 Fetching random approved video...");
+
+            const count = await VideoTip.count({ where: { is_approved: true } });
+
+            if (count === 0) {
+                return res.status(404).json({ error: 'No approved videos found' });
+            }
+
+            const randomOffset = Math.floor(Math.random() * count);
+
+            const video = await VideoTip.findOne({
+                where: { is_approved: true },
+                offset: randomOffset,
+                limit: 1,
+                include: [VideoCategory, User]
+            });
+
+            if (!video) {
+                return res.status(404).json({ error: 'No video found at random index' });
+            }
+
+            const host = `${req.protocol}://${req.get('host')}`;
+            const fullVideo = {
+                ...video.toJSON(),
+                thumbnail: video.thumbnail_url.startsWith('http') ? video.thumbnail_url : `${host}/${video.thumbnail_url}`,
+                video_url: video.video_url.startsWith('http') ? video.video_url : `${host}/${video.video_url}`,
+            };
+
+            console.log('✅ Random video fetched');
+            return res.status(200).json(fullVideo);
+        } catch (err) {
+            console.error("❌ Error fetching random video:", err);
+            return res.status(500).json({ error: err.message });
+        }
     }
 };
 

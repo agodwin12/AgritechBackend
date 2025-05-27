@@ -77,7 +77,35 @@ const CategoryController = {
         } catch (error) {
             return res.status(500).json({ error: error.message });
         }
+    },
+
+    // ✅ Get top categories based on product count
+    async getTopCategories(req, res) {
+        try {
+            console.log('📊 Fetching top categories by product count');
+
+            const categories = await Category.findAll({
+                attributes: [
+                    'id', 'name', 'image',
+                    [Sequelize.fn('COUNT', Sequelize.col('Products.id')), 'productCount']
+                ],
+                include: [{
+                    model: Product,
+                    attributes: [],
+                    where: { is_active: true }
+                }],
+                group: ['Category.id'],
+                order: [[Sequelize.literal('productCount'), 'DESC']],
+                limit: 5
+            });
+
+            return res.status(200).json(categories);
+        } catch (err) {
+            console.error('❌ Error fetching top categories:', err);
+            return res.status(500).json({ error: err.message });
+        }
     }
+
 };
 
 module.exports = CategoryController;

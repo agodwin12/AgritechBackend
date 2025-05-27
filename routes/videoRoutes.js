@@ -27,5 +27,7 @@ router.delete('/videos/:id/reject', authenticate, authorizeAdmin, videoControlle
 router.post('/videos/categories', authenticate, authorizeAdmin, videoController.createCategory);
 router.get('/categories', videoController.getCategories); // ✅ correct
 
+router.get('/random', videoController.getRandomApprovedVideo);
+
 
 module.exports = router;
