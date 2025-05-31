@@ -15,6 +15,11 @@ const Ebook = require('./Ebook');
 const EbookOrder = require('./EbookOrder');
 const VideoCategory = require('./VideoCategory');
 const VideoTip = require('./VideoTip');
+const WebinarRequest = require('./WebinarRequest')(sequelize, DataTypes);
+const Webinar = require('./Webinar')(sequelize, DataTypes);
+const WebinarAttendee = require('./WebinarAttendee')(sequelize, DataTypes);
+const WebinarQuestion = require('./WebinarQuestion')(sequelize, DataTypes);
+
 
 
 // Associations
@@ -78,6 +83,35 @@ VideoTip.belongsTo(User, { foreignKey: 'uploaded_by' });
 VideoCategory.hasMany(VideoTip, { foreignKey: 'category_id' });
 VideoTip.belongsTo(VideoCategory, { foreignKey: 'category_id' });
 
+// === Webinar Relationships ===
+
+// WebinarRequest belongsTo User
+User.hasMany(WebinarRequest, { foreignKey: 'requested_by_user_id' });
+WebinarRequest.belongsTo(User, { foreignKey: 'requested_by_user_id', as: 'requestedBy' });
+
+// Webinar belongsTo User (host)
+User.hasMany(Webinar, { foreignKey: 'host_user_id' });
+Webinar.belongsTo(User, { foreignKey: 'host_user_id', as: 'host' });
+
+// Webinar optionally links to an approved WebinarRequest
+WebinarRequest.hasOne(Webinar, { foreignKey: 'approved_request_id' });
+Webinar.belongsTo(WebinarRequest, { foreignKey: 'approved_request_id', as: 'fromRequest' });
+
+// WebinarAttendee belongsTo Webinar & User
+User.hasMany(WebinarAttendee, { foreignKey: 'user_id' });
+WebinarAttendee.belongsTo(User, { foreignKey: 'user_id' });
+
+Webinar.hasMany(WebinarAttendee, { foreignKey: 'webinar_id' });
+WebinarAttendee.belongsTo(Webinar, { foreignKey: 'webinar_id' });
+
+// WebinarQuestion belongsTo Webinar & User
+User.hasMany(WebinarQuestion, { foreignKey: 'user_id' });
+WebinarQuestion.belongsTo(User, { foreignKey: 'user_id' });
+
+Webinar.hasMany(WebinarQuestion, { foreignKey: 'webinar_id' });
+WebinarQuestion.belongsTo(Webinar, { foreignKey: 'webinar_id' });
+
+
 
 module.exports = {
     sequelize,
@@ -95,4 +129,8 @@ module.exports = {
     EbookOrder,
     VideoCategory,
     VideoTip,
+    WebinarRequest,
+    Webinar,
+    WebinarAttendee,
+    WebinarQuestion,
 };
