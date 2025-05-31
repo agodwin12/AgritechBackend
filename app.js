@@ -25,6 +25,7 @@ const userProductRoutes = require('./routes/userProductRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const ebookRoutes = require('./routes/ebookRoutes');
 const videoRoutes = require('./routes/videoRoutes');
+const webinarRoutes = require('./routes/webinarRoutes');
 
 // Middleware
 app.use(cors());
@@ -50,6 +51,7 @@ app.use('/api/admin/forum', adminForumRoutes);
 app.use('/api', userProductRoutes);
 app.use('/api/ebooks', ebookRoutes);
 app.use('/api/videos', videoRoutes);
+app.use('/api/webinars', webinarRoutes);
 
 
 
