@@ -26,7 +26,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const ebookRoutes = require('./routes/ebookRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const webinarRoutes = require('./routes/webinarRoutes');
-
+const advisoryRoutes = require('./routes/advisory');
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -41,7 +41,7 @@ app.use('/api/subcategories', subCategoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/users', userRoutes);
- app.use('/api/orders', orderRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api', reviewRoutes);
 app.use('/api/admins', adminRoutes);
@@ -52,7 +52,7 @@ app.use('/api', userProductRoutes);
 app.use('/api/ebooks', ebookRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/webinars', webinarRoutes);
-
+app.use('/api', advisoryRoutes);
 
 
 // Test database connection
