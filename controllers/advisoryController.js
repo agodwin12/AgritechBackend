@@ -6,67 +6,53 @@ const advisoryData = JSON.parse(
     fs.readFileSync(path.join(__dirname, '../data/advisory_grouped_by_region.json'), 'utf-8')
 );
 
-console.log('✅ Advisory data loaded from JSON file.');
-console.log(`📊 Total advisory entries: ${advisoryData.length}`);
+console.log('✅ Advisory data loaded from AI-enhanced JSON file.');
+console.log(`📊 Total entries loaded: ${advisoryData.length}`);
 
-// GET all advisory data — used for dropdowns in Flutter
+// GET all distinct regions for dropdown use
 exports.getAllAdvisories = (req, res) => {
     console.log('📥 GET /api/advisory requested');
-    console.log('📤 Sending all advisory data');
-    res.json(advisoryData);
+
+    const regions = [...new Set(advisoryData.map(
+        item => item["User Input: Region (Specific Locality/Village)"]
+    ))].sort();
+
+    console.log(`📤 Sending ${regions.length} unique regions`);
+    res.json({ regions });
 };
 
-// POST filtered advisory recommendation
+// POST filtered advisory result based on region, season, and optional soil type
 exports.getAdvisory = (req, res) => {
     console.log('📥 POST /api/advisory received');
 
     const { region, season, soil_type } = req.body;
 
-    console.log('🧾 Request Body:', { region, season, soil_type });
-
-    // Validate input
     if (!region || !season) {
         console.log('❌ Missing region or season in request');
         return res.status(400).json({ message: 'Region and Season are required.' });
     }
 
-    // Search for region
-    const entry = advisoryData.find(
-        (r) => r.region.toLowerCase() === region.toLowerCase()
+    console.log('🧾 Request Body:', { region, season, soil_type });
+
+    const entry = advisoryData.find(item =>
+        item["User Input: Region (Specific Locality/Village)"]?.toLowerCase() === region.toLowerCase() &&
+        item["User Input: Season (Relevant to Locality)"]?.toLowerCase() === season.toLowerCase() &&
+        (!soil_type || item["User Input: Soil Type (Common in Locality)"]?.toLowerCase() === soil_type.toLowerCase())
     );
 
     if (!entry) {
-        console.log(`❌ Region not found: "${region}"`);
-        return res.status(404).json({ message: 'Region not found.' });
+        console.log(`❌ No advisory match found`);
+        return res.status(404).json({ message: 'No advisory data found for the given parameters.' });
     }
-
-    console.log(`✅ Region found: "${entry.region}"`);
-
-    const matchedSoil = soil_type
-        ? entry.common_soil_types.includes(soil_type)
-        : true;
-
-    if (soil_type) {
-        console.log(
-            `🧪 Soil type "${soil_type}" is ${matchedSoil ? '✅ matched' : '❌ NOT matched'} in region "${entry.region}"`
-        );
-    }
-
-    const cropRotation = entry.crop_rotation_plans[season] || [];
-    const cropRecommendations = entry.crop_recommendations || [];
-
-    console.log(`🌾 Found ${cropRecommendations.length} crop recommendations`);
-    console.log(`🔁 Found ${cropRotation.length} crop rotation plans for season "${season}"`);
 
     const result = {
-        region: entry.region,
-        matched_soil: matchedSoil,
-        season,
-        crop_recommendations: cropRecommendations,
-        crop_rotation_plan: cropRotation,
-        advisory_notes: entry.advisory_notes
+        region: entry["User Input: Region (Specific Locality/Village)"],
+        season: entry["User Input: Season (Relevant to Locality)"],
+        soil_type: entry["User Input: Soil Type (Common in Locality)"],
+        crop_recommendations: entry["AI Generated Output: Crop Recommendations (Diverse Examples)"],
+        crop_rotation_plan: entry["AI Generated Output: Crop Rotation Planner (Example Sequence)"]
     };
 
-    console.log('📤 Responding with filtered advisory result:', result);
+    console.log('📤 Responding with advisory result:', result);
     res.json(result);
 };
