@@ -41,6 +41,10 @@ const Product = sequelize.define('Product', {
     seller_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
+    },
+    market_region: {
+        type: DataTypes.STRING,
+        allowNull: true,
     }
 }, {
     tableName: 'products',
