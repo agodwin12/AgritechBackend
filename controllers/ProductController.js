@@ -1,5 +1,5 @@
 const { Product, Category, SubCategory, User } = require('../models');
-
+const notifyUser = require('../services/notifyUser'); // ✅ make sure this is imported
 function formatProduct(product, hostUrl) {
     console.log(`\n🔄 Formatting product ID=${product.id}`);
 

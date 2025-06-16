@@ -10,6 +10,8 @@ const {
 } = require('../models');
 const { v4: uuidv4 } = require('uuid');
 const { Op } = require('sequelize');
+const notifyUser = require('../services/notifyUser');
+
 
 const VALID_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 const VALID_PAYMENT_STATUSES = ['unpaid', 'paid', 'refunded'];
@@ -190,6 +192,7 @@ const OrderController = {
 
             await t.commit();
 
+// Re-fetch full order
             const completeOrder = await Order.findByPk(order.id, {
                 include: [
                     {
@@ -204,7 +207,26 @@ const OrderController = {
                 ],
             });
 
+// 🔔 Notify buyer
+            await notifyUser(req.user.id, "Order Placed", "Your order has been placed successfully!", "order");
+
+// 🔔 Notify sellers (handle multiple vendors)
+            const notifiedSellers = new Set();
+            for (const item of completeOrder.OrderItems) {
+                const product = item.Product;
+                if (product.seller_id && !notifiedSellers.has(product.seller_id)) {
+                    await notifyUser(
+                        product.seller_id,
+                        "New Sale",
+                        `Your product "${product.name}" has been ordered.`,
+                        "sale"
+                    );
+                    notifiedSellers.add(product.seller_id);
+                }
+            }
+
             return res.status(201).json(completeOrder);
+
         } catch (error) {
             await t.rollback();
             return res.status(500).json({ error: error.message });

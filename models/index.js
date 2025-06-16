@@ -19,6 +19,8 @@ const WebinarRequest = require('./WebinarRequest')(sequelize, DataTypes);
 const Webinar = require('./Webinar')(sequelize, DataTypes);
 const WebinarAttendee = require('./WebinarAttendee')(sequelize, DataTypes);
 const WebinarQuestion = require('./WebinarQuestion')(sequelize, DataTypes);
+const Notification= require('./Notification')(sequelize, DataTypes);
+
 
 
 
@@ -111,6 +113,13 @@ WebinarQuestion.belongsTo(User, { foreignKey: 'user_id' });
 Webinar.hasMany(WebinarQuestion, { foreignKey: 'webinar_id' });
 WebinarQuestion.belongsTo(Webinar, { foreignKey: 'webinar_id' });
 
+//market updates relationship
+// Order associations
+Order.hasMany(OrderItem, { foreignKey: 'OrderId' });
+OrderItem.belongsTo(Order, { foreignKey: 'OrderId' });
+
+Product.hasMany(OrderItem, { foreignKey: 'ProductId' });
+OrderItem.belongsTo(Product, { foreignKey: 'ProductId' });
 
 
 
@@ -135,4 +144,5 @@ module.exports = {
     Webinar,
     WebinarAttendee,
     WebinarQuestion,
+    Notification,
 };

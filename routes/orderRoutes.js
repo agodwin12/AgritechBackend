@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const OrderController = require('../controllers/OrderController');
 const { authenticate, authorizeAdmin } = require('../middleware/authMiddleware');
+const notifyUser = require('../services/notifyUser');
+
+// Example:
 
 // All order routes require authentication
 router.use(authenticate);

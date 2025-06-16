@@ -9,11 +9,17 @@ const registerUser = async (req, res) => {
             phone,
             password,
             address,
-            date_of_birth
+            date_of_birth,
+            account_type // <-- New field
         } = req.body;
 
-        if (!full_name || !email || !phone || !password) {
+        if (!full_name || !email || !phone || !password || !account_type) {
             return res.status(400).json({ message: 'Missing required fields' });
+        }
+
+        const validTypes = ['buyer', 'seller', 'author'];
+        if (!validTypes.includes(account_type)) {
+            return res.status(400).json({ message: 'Invalid account type' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -25,7 +31,8 @@ const registerUser = async (req, res) => {
             password: hashedPassword,
             address,
             date_of_birth,
-            profile_image: req.file ? req.file.filename : null, // Save filename only
+            profile_image: req.file ? req.file.filename : null,
+            account_type, // <-- Save it
         });
 
         res.status(201).json({ message: 'User registered successfully', user: newUser });
@@ -36,6 +43,7 @@ const registerUser = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
 
 const changePassword = async (req, res) => {
     try {

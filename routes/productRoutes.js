@@ -3,6 +3,9 @@ const router = express.Router();
 const ProductController = require('../controllers/ProductController');
 const { authenticate, isAdmin } = require('../middleware/auth');
 const upload = require('../middleware/upload'); // Assuming this exists
+const notifyUser = require('../services/notifyUser');
+
+// Example:
 
 // Public GET routes
 router.get('/', ProductController.getAllProducts);

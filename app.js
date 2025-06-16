@@ -27,6 +27,11 @@ const ebookRoutes = require('./routes/ebookRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const webinarRoutes = require('./routes/webinarRoutes');
 const advisoryRoutes = require('./routes/advisory');
+const chatbotRoutes = require('./routes/chatbot');
+const notificationRoutes = require('./routes/notifications');
+const marketRoutes = require('./routes/market');
+
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -52,6 +57,9 @@ app.use('/api/ebooks', ebookRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/webinars', webinarRoutes);
 app.use('/api', advisoryRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+app.use('/notifications', notificationRoutes);
+app.use('/api/market', require('./routes/market'));
 
 
 

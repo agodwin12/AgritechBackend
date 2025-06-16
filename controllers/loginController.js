@@ -44,6 +44,8 @@ const loginUser = async (req, res) => {
         );
 
         const { password: _, ...safeUserData } = user.toJSON();
+        console.log("✅ Login successful:", safeUserData); // Optional: Debug log
+
 
         return res.status(200).json({
             message: 'Login successful',
@@ -56,6 +58,8 @@ const loginUser = async (req, res) => {
         return res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
+
 
 const googleLogin = async (req, res) => {
     try {
@@ -132,6 +136,8 @@ const forgotPassword = async (req, res) => {
     }
 };
 
+
+
 const resetPassword = async (req, res) => {
     const { resetToken, newPassword } = req.body;
 
@@ -155,4 +161,7 @@ const resetPassword = async (req, res) => {
 };
 
 
+
 module.exports = { loginUser, googleLogin, forgotPassword, resetPassword };
+
+

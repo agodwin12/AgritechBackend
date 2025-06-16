@@ -29,6 +29,12 @@ const User = sequelize.define('User', {
     profile_image: {
         type: DataTypes.STRING,
     },
+    account_type: {
+        type: DataTypes.ENUM('buyer', 'seller', 'author'),
+        allowNull: false,
+        defaultValue: 'buyer',
+    },
+
     bio: {
         type: DataTypes.TEXT,
     },
