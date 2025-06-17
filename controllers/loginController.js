@@ -2,6 +2,97 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const User = require('../models/user');
+const otpStore = {};
+const axios = require('axios');
+
+// Send OTP via ClickSend
+const sendOtp = async (req, res) => {
+    const { phone } = req.body;
+
+    console.log(`📨 Request to send OTP to: ${phone}`);
+
+    if (!phone) {
+        console.warn("⚠️ No phone number provided");
+        return res.status(400).json({ message: 'Phone number is required' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    console.log(`🔐 Generated OTP: ${otp} for ${phone}`);
+
+    // Store OTP temporarily
+    otpStore[phone] = {
+        otp,
+        expiresAt: Date.now() + 5 * 60 * 1000, // valid for 5 minutes
+    };
+
+    try {
+        const response = await axios.post(
+            'https://rest.clicksend.com/v3/sms/send',
+            {
+                messages: [
+                    {
+                        source: 'nodejs',
+                        to: phone.startsWith('+') ? phone : `+${phone}`,
+                        body: `Your OTP code is: ${otp}`,
+                    },
+                ],
+            },
+            {
+                auth: {
+                    username: process.env.CLICKSEND_USERNAME,
+                    password: process.env.CLICKSEND_API_KEY,
+                },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        console.log(`✅ OTP sent to ${phone}. ClickSend response:`, response.data);
+        return res.json({ message: 'OTP sent successfully', clicksend: response.data });
+
+    } catch (error) {
+        console.error("❌ Failed to send OTP:", error.response?.data || error.message);
+        return res.status(500).json({
+            message: 'Failed to send OTP',
+            error: error.response?.data || error.message,
+        });
+    }
+};
+
+// Verify OTP
+const verifyOtp = (req, res) => {
+    const { phone, otp } = req.body;
+
+    console.log(`📥 Verifying OTP for ${phone}: ${otp}`);
+
+    const entry = otpStore[phone];
+
+    if (!entry) {
+        console.warn(`⚠️ No OTP entry found for ${phone}`);
+        return res.status(400).json({ message: 'OTP not found. Please request a new one.' });
+    }
+
+    if (entry.expiresAt < Date.now()) {
+        console.warn(`⏳ OTP for ${phone} has expired.`);
+        delete otpStore[phone];
+        return res.status(400).json({ message: 'OTP expired. Please request a new one.' });
+    }
+
+    if (entry.otp != otp) {
+        console.warn(`❌ Invalid OTP for ${phone}. Provided: ${otp}, Expected: ${entry.otp}`);
+        return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
+    }
+
+    console.log(`✅ OTP verified for ${phone}`);
+    delete otpStore[phone]; // Clear OTP after successful verification
+
+    return res.json({ message: 'OTP verified successfully' });
+};
+
+
+
+
 
 const loginUser = async (req, res) => {
     try {
@@ -162,6 +253,13 @@ const resetPassword = async (req, res) => {
 
 
 
-module.exports = { loginUser, googleLogin, forgotPassword, resetPassword };
+module.exports = {   loginUser,
+    googleLogin,
+    forgotPassword,
+    resetPassword,
+    sendOtp,
+    verifyOtp
+
+};
 
 
