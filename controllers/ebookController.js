@@ -175,6 +175,29 @@ const ebookController = {
             res.status(500).json({ error: err.message });
         }
     },
+
+    // In ebookController
+    async getRandomEbooks(req, res) {
+        try {
+            const count = await Ebook.count({ where: { is_approved: true } });
+            const limit = parseInt(req.query.limit) || 4;
+            const randomOffset = Math.max(0, Math.floor(Math.random() * Math.max(1, count - limit)));
+
+            const ebooks = await Ebook.findAll({
+                where: { is_approved: true },
+                include: [EbookCategory, User],
+                offset: randomOffset,
+                limit,
+            });
+
+            return res.json(ebooks);
+        } catch (err) {
+            console.error("Error fetching random ebooks:", err);
+            res.status(500).json({ error: err.message });
+        }
+    }
+
+
 };
 
 module.exports = ebookController;

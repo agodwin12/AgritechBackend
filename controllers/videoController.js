@@ -220,7 +220,28 @@ const videoController = {
             console.error("❌ Error fetching random video:", err);
             return res.status(500).json({ error: err.message });
         }
+    },
+
+    async getRandomVideos(req, res) {
+        try {
+            const count = await VideoTip.count({ where: { is_approved: true } });
+            const limit = parseInt(req.query.limit) || 4;
+            const randomOffset = Math.max(0, Math.floor(Math.random() * Math.max(1, count - limit)));
+
+            const videos = await VideoTip.findAll({
+                where: { is_approved: true },
+                include: [VideoCategory, User],
+                offset: randomOffset,
+                limit,
+            });
+
+            return res.json(videos);
+        } catch (err) {
+            console.error("Error fetching random videos:", err);
+            res.status(500).json({ error: err.message });
+        }
     }
+
 };
 
 module.exports = videoController;

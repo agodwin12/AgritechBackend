@@ -14,6 +14,7 @@ router.get('/requests/pending', webinarController.getPendingRequests);  // Admin
 router.post('/approve/:id', webinarController.approveWebinarRequest);   // Admin approves a request & creates webinar
 router.patch('/questions/:id/answer', webinarController.markQuestionAnswered); // Admin marks a question as answered
 router.post('/', webinarController.createWebinar); // Admin creates webinar manually
+router.get('/random', webinarController.getRandomWebinars);
 
 
 module.exports = router;

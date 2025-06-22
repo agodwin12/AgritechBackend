@@ -257,3 +257,46 @@ exports.markQuestionAnswered = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+
+// ✅ 10. Get random upcoming webinars
+exports.getRandomWebinars = async (req, res) => {
+    console.log("📥 [REQUEST] Fetching random upcoming webinars");
+
+    try {
+        const limit = parseInt(req.query.limit) || 3;
+
+        const total = await Webinar.count({ where: { status: 'scheduled' } });
+
+        if (total === 0) {
+            return res.status(404).json({ message: 'No webinars available' });
+        }
+
+        const offset = Math.max(0, Math.floor(Math.random() * Math.max(1, total - limit)));
+
+        const webinars = await Webinar.findAll({
+            where: { status: 'scheduled' },
+            include: [
+                { model: User, as: 'host', attributes: ['id', 'full_name'] }
+            ],
+            offset,
+            limit,
+            order: [['scheduled_date', 'ASC']],
+        });
+
+        const baseUrl = `${req.protocol}://${req.get('host')}/uploads/`;
+
+        const formatted = webinars.map(w => {
+            const json = w.toJSON();
+            json.image_url = w.image ? baseUrl + w.image : null;
+            return json;
+        });
+
+        console.log(`✅ Fetched ${formatted.length} random webinars`);
+        return res.status(200).json({ webinars: formatted });
+    } catch (error) {
+        console.error('❌ Error in getRandomWebinars:', error);
+        return res.status(500).json({ message: 'Server error.' });
+    }
+};
+

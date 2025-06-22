@@ -29,5 +29,8 @@ router.get('/categories', videoController.getCategories); // ✅ correct
 
 router.get('/random', videoController.getRandomApprovedVideo);
 
+router.get('/random-multiple', videoController.getRandomVideos);
+
+
 
 module.exports = router;

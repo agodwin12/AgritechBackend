@@ -63,4 +63,7 @@ router.put('/ebooks/:id', authenticate, ebookController.updateEbook);
 // ✅ Delete ebook (author only or admin)
 router.delete('/ebooks/:id', authenticate, ebookController.deleteEbook);
 
+router.get('/random', ebookController.getRandomEbooks);
+
+
 module.exports = router; // 🔁 Export the router
