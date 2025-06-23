@@ -30,6 +30,9 @@ const advisoryRoutes = require('./routes/advisory');
 const chatbotRoutes = require('./routes/chatbot');
 const notificationRoutes = require('./routes/notifications');
 const marketRoutes = require('./routes/market');
+const feedbackRoutes = require('./routes/feedback');
+
+
 
 
 app.use(cors());
@@ -60,6 +63,7 @@ app.use('/api', advisoryRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/api/market', require('./routes/market'));
+app.use('/feedback', feedbackRoutes);
 
 
 

@@ -20,6 +20,8 @@ const Webinar = require('./Webinar')(sequelize, DataTypes);
 const WebinarAttendee = require('./WebinarAttendee')(sequelize, DataTypes);
 const WebinarQuestion = require('./WebinarQuestion')(sequelize, DataTypes);
 const Notification= require('./Notification')(sequelize, DataTypes);
+const Feedback = require('./Feedback')(sequelize, DataTypes);
+
 
 
 
@@ -145,4 +147,5 @@ module.exports = {
     WebinarAttendee,
     WebinarQuestion,
     Notification,
+    Feedback,
 };
