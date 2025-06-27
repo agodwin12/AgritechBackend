@@ -51,5 +51,12 @@ const Product = sequelize.define('Product', {
     timestamps: true,
 });
 
+Product.associate = (models) => {
+    Product.hasMany(models.ProductPriceLog, {
+        foreignKey: 'ProductId',
+        as: 'PriceLogs'
+    });
+};
+
 
 module.exports = Product;

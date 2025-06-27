@@ -14,7 +14,7 @@ const subCategoryRoutes = require('./routes/subCategoryRoutes');
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const userRoutes = require('./routes/userRoutes');
-const forumRoutes = require('./routes/forumRoutes');
+const forumRoutes = require('./routes/postRoutes');
 const path = require('path');
 const reviewRoutes = require('./routes/reviewRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -31,7 +31,7 @@ const chatbotRoutes = require('./routes/chatbot');
 const notificationRoutes = require('./routes/notifications');
 const marketRoutes = require('./routes/market');
 const feedbackRoutes = require('./routes/feedback');
-
+const postRoutes = require('./routes/PostRoutes');   // ✅ new post routes
 
 
 
@@ -64,7 +64,7 @@ app.use('/api/chatbot', chatbotRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/api/market', require('./routes/market'));
 app.use('/feedback', feedbackRoutes);
-
+app.use('/api', postRoutes); // ✅ mount the new PostController routes
 
 
 // Test database connection

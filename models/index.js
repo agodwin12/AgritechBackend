@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
-
+const Post = require('./Post');
+const Comment = require('./Comment');
+const Like = require('./Like');
 const User = require('./User');
 const Category = require('./Category');
 const SubCategory = require('./SubCategory');
@@ -8,7 +10,6 @@ const Product = require('./Product');
 const Order = require('./Order');
 const OrderItem = require('./OrderItem');
 const Cart = require('./Cart');
-const ForumMessage = require('./ForumMessage');
 const Review = require('./review')(sequelize, DataTypes);
 const EbookCategory = require('./EbookCategory');
 const Ebook = require('./Ebook');
@@ -21,7 +22,7 @@ const WebinarAttendee = require('./WebinarAttendee')(sequelize, DataTypes);
 const WebinarQuestion = require('./WebinarQuestion')(sequelize, DataTypes);
 const Notification= require('./Notification')(sequelize, DataTypes);
 const Feedback = require('./Feedback')(sequelize, DataTypes);
-
+const ProductPriceLog = require('./ProductPriceLog');
 
 
 
@@ -51,8 +52,24 @@ Cart.belongsTo(User);
 Product.hasMany(Cart);
 Cart.belongsTo(Product);
 
-User.hasMany(ForumMessage, { foreignKey: 'user_id' });
-ForumMessage.belongsTo(User, { foreignKey: 'user_id' });
+// post forum Associations
+User.hasMany(Post, { foreignKey: 'user_id' });
+Post.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasMany(Comment, { foreignKey: 'user_id' });
+Comment.belongsTo(User, { foreignKey: 'user_id' });
+
+Post.hasMany(Comment, { foreignKey: 'post_id' });
+Comment.belongsTo(Post, { foreignKey: 'post_id' });
+
+User.hasMany(Like, { foreignKey: 'user_id' });
+Like.belongsTo(User, { foreignKey: 'user_id' });
+
+Post.hasMany(Like, { foreignKey: 'post_id' });
+Like.belongsTo(Post, { foreignKey: 'post_id' });
+
+Comment.hasMany(Like, { foreignKey: 'comment_id' });
+Like.belongsTo(Comment, { foreignKey: 'comment_id' });
 
 // ✅ Review associations
 Product.hasMany(Review, { foreignKey: 'productId', onDelete: 'CASCADE' });
@@ -135,7 +152,6 @@ module.exports = {
     Order,
     OrderItem,
     Cart,
-    ForumMessage,
     Review,
     EbookCategory,
     Ebook,
@@ -148,4 +164,8 @@ module.exports = {
     WebinarQuestion,
     Notification,
     Feedback,
+    Post,
+    Comment,
+    Like,
+    ProductPriceLog,
 };

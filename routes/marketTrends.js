@@ -4,12 +4,15 @@ const {
     getMarketSummary,
     getCropTrend,
     submitMarketPrice,
+    getCategoryDailyTrend,
 } = require('../controllers/marketTrendsController');
 
 // Routes
 router.get('/summary', getMarketSummary);
 router.get('/:cropName', getCropTrend);
 router.post('/submit', submitMarketPrice);
+
+
 
 
 module.exports = router;

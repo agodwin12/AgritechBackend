@@ -1,10 +1,14 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const ForumMessage = sequelize.define('ForumMessage', {
+const Post = sequelize.define('Post', {
     user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
+    },
+    title: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     text: {
         type: DataTypes.TEXT,
@@ -14,17 +18,13 @@ const ForumMessage = sequelize.define('ForumMessage', {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    likes: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-    },
-    replies: {
+    likes_count: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
     }
 }, {
-    tableName: 'forum_messages',
+    tableName: 'posts',
     timestamps: true,
 });
 
-module.exports = ForumMessage;
+module.exports = Post;

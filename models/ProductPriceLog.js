@@ -1,6 +1,9 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
+
+
+
 const ProductPriceLog = sequelize.define('ProductPriceLog', {
     product_id: {
         type: DataTypes.INTEGER,
@@ -18,5 +21,13 @@ const ProductPriceLog = sequelize.define('ProductPriceLog', {
     tableName: 'product_price_logs',
     timestamps: false,
 });
+
+ProductPriceLog.associate = (models) => {
+    ProductPriceLog.belongsTo(models.Product, {
+        foreignKey: 'ProductId',
+        as: 'Product'
+    });
+};
+
 
 module.exports = ProductPriceLog;

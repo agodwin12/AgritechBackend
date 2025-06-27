@@ -1,4 +1,4 @@
-const ForumMessage = require('../models/ForumMessage');
+const ForumMessage = require('../models/Post');
 const User = require('../models/user');
 const { Op } = require('sequelize');
 
